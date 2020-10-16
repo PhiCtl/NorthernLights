@@ -3,26 +3,28 @@ import numpy as np
 
 #------------------------------------------CATEGORICAL EXTRACTION----------------------------------------------------------------------#
 
-def extract_jet(x, categ_ind, jet_num, indices):
+def extract_jet(x, y, categ_ind, jet_num, indices):
     """Extract data for which PRI_jet_num = jet_num and remove undefined features"""
     
-    #data points for which jet = jet_num
-    data_points = x[ np.nonzero(x[:,categ_ind] == jet_num)] 
+    #data points and corresponding output for which jet = jet_num
+    jet_ind = np.nonzero(x[:,categ_ind] == jet_num)
+    data_points = x[jet_ind] 
+    output = y[jet_ind]
     #remove undefined features (indices) for those datapoints
     if(indices):
         data_points = np.delete(data_points, indices, 1)
-    return data_points
+    return data_points, output
 
-def get_jets(x, cat_id, undefined_indices):
+def get_jets(x, y, cat_id, undefined_indices):
     
     """Extract 4 different data subsets depending on value of PRI_jet_num"""
     
-    jet_0 = extract_jet(x, cat_id, 0, undefined_indices[0])
-    jet_1 = extract_jet(x, cat_id, 1, undefined_indices[1])
-    jet_2 = extract_jet(x, cat_id, 2, undefined_indices[2])
-    jet_3 = extract_jet(x, cat_id, 3, undefined_indices[3])
+    jet_0, y_0 = extract_jet(x, cat_id, 0, undefined_indices[0])
+    jet_1, y_1 = extract_jet(x, cat_id, 1, undefined_indices[1])
+    jet_2, y_2 = extract_jet(x, cat_id, 2, undefined_indices[2])
+    jet_3, y_3 = extract_jet(x, cat_id, 3, undefined_indices[3])
         
-    return jet_0, jet_1, jet_2, jet_3
+    return jet_0, y_0, jet_1, y_1, jet_2, y_2, jet_3, y_3
 
 #-------------------------------------DATA STANDARDIZATION------------------------------------------------------------------------------#
 
