@@ -19,10 +19,10 @@ def get_jets(x, y, cat_id, undefined_indices):
     
     """Extract 4 different data subsets depending on value of PRI_jet_num"""
     
-    jet_0, y_0 = extract_jet(x, cat_id, 0, undefined_indices[0])
-    jet_1, y_1 = extract_jet(x, cat_id, 1, undefined_indices[1])
-    jet_2, y_2 = extract_jet(x, cat_id, 2, undefined_indices[2])
-    jet_3, y_3 = extract_jet(x, cat_id, 3, undefined_indices[3])
+    jet_0, y_0 = extract_jet(x, y, cat_id, 0, undefined_indices[0])
+    jet_1, y_1 = extract_jet(x, y, cat_id, 1, undefined_indices[1])
+    jet_2, y_2 = extract_jet(x, y, cat_id, 2, undefined_indices[2])
+    jet_3, y_3 = extract_jet(x, y, cat_id, 3, undefined_indices[3])
         
     return jet_0, y_0, jet_1, y_1, jet_2, y_2, jet_3, y_3
 
