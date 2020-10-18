@@ -1,12 +1,57 @@
 # -*- coding: utf-8 -*-
-"""A function to compute the cost."""
+
 import numpy as np
 
-def compute_loss
-#amodifier
+#-------------------------------------------------LOSSES-------------------------------------------------------------#
+
+def compute_loss_MSE(y, tx, w, lambda_ = 0, L1_reg = False):
+    """Calculate the MSE loss
+    """
+    e = y - tx.dot(w)
+    if L1_reg:
+        return 0.5*np.mean(e**2) + lambda_*np.linalg.norm(w,1)
+    else:    
+        return 0.5*np.mean(e**2) + lambda_*(np.linalg.norm(w)**2)
 
 
-def compute_gradient
+def compute_RMSE(y, tx, w, lambda_ = 0):
+    "Calculate the RMSE loss"
+    return np.sqrt(2*compute_loss_MSE(y, tx, w, lambda_ = lambda_))
+
+
+def compute_loss_logREG(y, tx, w, lambda_ = 0):
+    """compute the loss: negative log likelihood."""
+    L1 = y.T.dot(tx.dot(w))
+    L2 = np.sum(np.log(np.ones(tx.shape[0]) + np.exp(tx.dot(w)))) 
+    return L1 + L2 + lambda_*np.linalg.norm(w)**2
+
+def compute_loss_MAE(y, tx, w, lambda_ = 0):
+    """Calculate the loss.
+    You can calculate the loss using mae.
+    """
+    e = y - tx @ w
+    return (1/len(y) * np.sum(np.abs(e), axis = 0) )
+
+def compute_loss(y, tx, w, loss_type = 'MSE', lbd = 0, L1 = False):
+    
+    if loss_type == 'RMSE':
+        return compute_RMSE(y, tx, w, lambda_ = lbd)
+    if loss_type == 'MAE':
+        return compute_loss_MAE(y, tx, w, lambda_ = lbd)
+    if loss_type == 'logREG':
+        return compute_loss_logREG(y, tx, w, lambda_ = lbd)  
+    
+    return compute_loss_MSE(y, tx, w, lambda_ = lbd,  L1_reg = L1)
+
+#---------------------------------------GRADIENT--------------------------------------------------------#
+
+def compute_LS_gradient(y, tx, w):
+    """Compute the gradient."""
+
+    e = y - tx.dot(w)
+    N = len(e)
+    return -1/N * tx.T.dot(e)
+
 
 def compute_stoch_gradient(y, tx, w, batch_size):
     """Compute a stochastic gradient from just few examples n and their corresponding y_n labels."""
@@ -26,7 +71,19 @@ def calculate_gradient_logREG(y, tx, w):
     grad=tx.T.dot((sig)-y)
     
     return grad
-#___________________
+
+def compute_gradient(y, tx, w, method, batch_s = 1):
+    
+    if method == 2:
+        return compute_LS_gradient(y, tx, w)
+    if method == 3:
+        return compute_stoch_gradient(y, tx, w, batch_size = batch_s)
+    if method == 6:
+        return calculate_gradient_logREG(y, tx, w)
+    else:
+        print("Error: no method specified")
+
+#-------------------------------------------------------------------------------------------------------------------#
 
 
 def build_poly(x, degree):
