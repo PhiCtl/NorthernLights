@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-#------------------------------------------CATEGORICAL EXTRACTION----------------------------------------------------------------------#
+#------------------------------------------CATEGORICAL EXTRACTION---------------------------------------------------------#
 
 def extract_jet(x, y, categ_ind, jet_num, indices):
     """Extract data for which PRI_jet_num = jet_num and remove undefined features"""

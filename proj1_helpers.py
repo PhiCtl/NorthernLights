@@ -31,6 +31,11 @@ def predict_labels(weights, data):
     
     return y_pred
 
+def predict_labels_2(y):
+    y[y <=0] = -1
+    y[y > 0] = 1
+    return y
+
 #-----------------------------GET JETS FOR FINAL TEST SET------------------------------------------------------------#
 
 def extract_jet(x, categ_ind, jet_num, indices):
@@ -45,13 +50,13 @@ def extract_jet(x, categ_ind, jet_num, indices):
     return jet, ind
 
 
-def get_jets(x, cat_id, undefined_features):
+def get_jets_final(x, cat_ind, undefined_features):
     
     """Get jets for final test set"""
-    jet0, ind_0 = extract_jet(x, categ_ind, 0, undefined_features[0])
-    jet1, ind_1 = extract_jet(x, categ_ind, 1, undefined_features[1])
-    jet2, ind_2 = extract_jet(x, categ_ind, 2, undefined_features[2])
-    jet3, ind_3 = extract_jet(x, categ_ind, 3, undefined_features[3])
+    jet0, ind_0 = extract_jet(x, cat_ind, 0, undefined_features[0])
+    jet1, ind_1 = extract_jet(x, cat_ind, 1, undefined_features[1])
+    jet2, ind_2 = extract_jet(x, cat_ind, 2, undefined_features[2])
+    jet3, ind_3 = extract_jet(x, cat_ind, 3, undefined_features[3])
     
     ind_list = [ind_0, ind_1, ind_2, ind_3]
     
@@ -64,7 +69,6 @@ def combine_jets(y_jets, indices):
     for jet in y_jets:
         n += len(jet)
     y = np.zeros((n,)) #don't write (n,1) it doesn't like it... 
-    
     
     #fill in y with corresponding y_jets in order
     for i, ind in enumerate(indices):
