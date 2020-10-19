@@ -1,23 +1,17 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from costs import compute_loss_MSE, compute_RMSE
+from utils import compute_loss, compute_gradient
 from data_preprocessing import *
 
-#-----------------------------------LEAST SQUARES GRADIENT DESCENT-------------------------------------------------------------------------#
+#-----------------------------------LEAST SQUARES GRADIENT DESCENT--------------------------------------------------------------------#
 
-" Useful to compute least_squares_GD "
-def compute_gradient(y, tx, w):
-    """Compute the gradient."""
-
-    e = y - tx.dot(w)
-    N = len(e)
-    return -1/N * tx.T.dot(e)
 
 "Least_squares method using gradient descent"
 
 def least_squares_GD(y, tx, initial_w, max_iters, gamma):
     
-    """linear regression using Gradient descent algorithm."""
+    """linear regression using Gradient descent algorithm.
+    Returns RMSE and w_opt"""
    
     # Define parameters to store w and loss
     ws = [initial_w]
@@ -26,10 +20,10 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
    
     for n_iter in range(max_iters):
         
-        #compute current gradient and loss(mse)
+        #compute current gradient and loss rmse
         w = ws[-1]
-        g = compute_gradient(y, tx, w)
-        loss = compute_RMSE(y, tx, w)
+        g = compute_gradient(y, tx, w, 2)
+        loss = compute_loss(y, tx, w, loss_type = 'RMSE' )
         #update w
         w = w - gamma*g
         
@@ -44,7 +38,8 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
 " Ridge regression using normal equations"
 
 def ridge_regression(y, tx, lambda_):
-    """implement ridge regression."""
+    """implement ridge regression.
+    Returns RMSE and w_opt"""
     
     #optimal weights calculated explicitly
     n = tx.shape[1]
@@ -52,7 +47,7 @@ def ridge_regression(y, tx, lambda_):
     b = tx.T.dot(y)
     w_opt = np.linalg.solve(A,b)
     
-    rmse = compute_RMSE(y, tx, w_opt)
+    rmse = compute_loss(y, tx, w_opt, loss_type = 'RMSE')
     
     #returns the root mean squared error associated with the optimal weights
     return rmse, w_opt
