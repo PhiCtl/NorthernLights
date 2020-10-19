@@ -23,18 +23,6 @@ def load_csv_data(data_path, sub_sample=False):
     return yb, input_data, ids
 
 
-def predict_labels(weights, data):
-    """Generates class predictions given weights, and a test data matrix"""
-    y_pred = np.dot(data, weights)
-    y_pred[np.where(y_pred <= 0)] = -1
-    y_pred[np.where(y_pred > 0)] = 1
-    
-    return y_pred
-
-def predict_labels_2(y):
-    y[y <=0] = -1
-    y[y > 0] = 1
-    return y
 
 #-----------------------------GET JETS FOR FINAL TEST SET------------------------------------------------------------#
 
@@ -50,7 +38,7 @@ def extract_jet(x, categ_ind, jet_num, indices):
     return jet, ind
 
 
-def get_jets_final(x, cat_ind, undefined_features):
+def get_jets_final(x, cat_ind, undefined_features, list_ = True):
     
     """Get jets for final test set"""
     jet0, ind_0 = extract_jet(x, cat_ind, 0, undefined_features[0])
@@ -60,7 +48,10 @@ def get_jets_final(x, cat_ind, undefined_features):
     
     ind_list = [ind_0, ind_1, ind_2, ind_3]
     
-    return jet0, jet1, jet2, jet3, ind_list
+    if list_:
+        return [jet0, jet1, jet2, jet3], ind_list
+    else:
+        return jet0, jet1, jet2, jet3, ind_list
 
 def combine_jets(y_jets, indices):
     
