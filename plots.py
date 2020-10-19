@@ -4,76 +4,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def cross_validation_visualization_gammas(gammas, mse_tr, mse_te):
+def cross_validation_visualization(param, rmse_tr, rmse_te, param_type):
     """visualization the curves of rmse_tr and rmse_te."""
-    plt.semilogx(gammas, mse_tr, marker=".", color='b', label='train error')
-    plt.semilogx(gammas, mse_te, marker=".", color='r', label='test error')
-    plt.xlabel("gamma")
-    plt.ylabel("rmse")
-    plt.title("cross validation")
-    plt.legend(loc=2)
-    plt.grid(True)
-    plt.savefig("cross_validation_gamma")
-
-def cross_validation_visualization_lambdas(lambdas, mse_tr, mse_te):
-    """visualization the curves of rmse_tr and rmse_te."""
-    plt.semilogx(lambdas, mse_tr, marker=".", color='b', label='train error')
-    plt.semilogx(lambdas, mse_te, marker=".", color='r', label='test error')
-    plt.xlabel("lambda")
-    plt.ylabel("rmse")
-    plt.title("cross validation")
-    plt.legend(loc=2)
-    plt.grid(True)
-    plt.savefig("cross_validation_lambda")
     
-def cross_validation_visualization_degrees(deg, mse_tr, mse_te):
-    """visualization the curves of rmse_tr and rmse_te."""
-    plt.semilogx(deg, mse_tr, marker=".", color='b', label='train error')
-    plt.semilogx(deg, mse_te, marker=".", color='r', label='test error')
-    plt.xlabel("degree")
+    #Param type can be: degree, gamma, lambda
+    
+    plt.semilogx(param, rmse_tr, marker=".", color='b', label='train error')
+    plt.semilogx(param, rmse_te, marker=".", color='r', label='test error')
+    plt.xlabel(param_type)
     plt.ylabel("rmse")
     plt.title("cross validation")
     plt.legend(loc=2)
     plt.grid(True)
-    plt.savefig("cross_validation_degrees")
+    plt.savefig("cross validation for " + param_type)
 
 
-def bias_variance_decomposition_visualization(degrees, rmse_tr, rmse_te):
-    """visualize the bias variance decomposition."""
-    rmse_tr_mean = np.expand_dims(np.mean(rmse_tr, axis=0), axis=0)
-    rmse_te_mean = np.expand_dims(np.mean(rmse_te, axis=0), axis=0)
-    plt.plot(
-        degrees,
-        rmse_tr.T,
-        'b',
-        linestyle="-",
-        color=([0.7, 0.7, 1]),
-        label='train',
-        linewidth=0.3)
-    plt.plot(
-        degrees,
-        rmse_te.T,
-        'r',
-        linestyle="-",
-        color=[1, 0.7, 0.7],
-        label='test',
-        linewidth=0.3)
-    plt.plot(
-        degrees,
-        rmse_tr_mean.T,
-        'b',
-        linestyle="-",
-        label='train',
-        linewidth=3)
-    plt.plot(
-        degrees,
-        rmse_te_mean.T,
-        'r',
-        linestyle="-",
-        label='test',
-        linewidth=3)
-    plt.ylim(0.2, 0.7)
-    plt.xlabel("degree")
-    plt.ylabel("error")
-    plt.title("Bias-Variance Decomposition")
-    plt.savefig("bias_variance")
+
+def plot_variance(rmse_te, param):
+    fig, ax1 = plt.subplots()
+    title = 'RMSE test data versus ' + param
+    ax1.set_title(title)
+    ax1.boxplot(rmse_te.T)
+    
