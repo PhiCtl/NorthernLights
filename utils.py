@@ -83,7 +83,7 @@ def compute_gradient(y, tx, w, method, batch_s = 1):
     else:
         print("Error: no method specified")
 
-#-------------------------------------------------------------------------------------------------------------------#
+#----------------------------------------FEATURES AUGMENTATION ------------------------------------------------------------#
 
 
 def build_poly(x, degree):
@@ -94,8 +94,39 @@ def build_poly(x, degree):
         
     return phi
 
-#------------------
+#------------------------------------------ACCURACY-------------------------------------------------------------#
 
+def predict_labels(weights, data):
+    """Generates class predictions given weights, and a test data matrix"""
+    y_pred = np.dot(data, weights)
+    y_pred[np.where(y_pred <= 0)] = -1
+    y_pred[np.where(y_pred > 0)] = 1
+    
+    return y_pred
+
+def predict_labels_2(y_pred):
+    y_pred[np.where(y_pred <= 0)] = -1
+    y_pred[np.where(y_pred > 0)] = 1
+    return y_pred
+
+def accuracy(y_true, x_te, w_opt):
+                 
+    """Compute accuracy of a given model"""
+    y_test = predict_labels(w_opt, x_te)
+    acc = np.equal(y_test, y_true)
+    return np.sum(acc)/len(y_test)
+
+def accuracy_2(y_true, y_pred):
+    
+    if(len(y_true) != len(y_pred)):
+        print("Error: sizes don't match")
+    else:
+        y_pred[y_pred <= 0] = -1
+        y_pred[y_pred > 0] = 1
+        acc = np.equal(y_true, y_pred)
+        return np.sum(acc)/len(y_true)
+    
+#-----------------------------LOGISTIC REGRESSION ------------------------------------------------------#
 
 
 def sigmoid(t):
