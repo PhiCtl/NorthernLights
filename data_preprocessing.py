@@ -109,3 +109,20 @@ def correlation(x):
             x=np.delete(x, index[i,0],1)
             deleted_column=np.append(deleted_column, index[i,0])
     return x
+
+def data_standardization(x,y,categ_ind, undefined_indices, flag_standard=1, flag_correlation=0):
+    #delete the meaningless features depending on the value of PRI_JET_NUM
+    x_jets, y_jets, ind=get_jets(x, y, cat_id, undefined_indices, True)
+    
+    #standardize jet
+    if flag_standard==1:
+        for i in range (0,4):
+            x_jets[i]=standard(x_jets[i])
+            y_jets[i]=standard(y_jets[i])
+    
+    #correlation
+    if flag_correlation==1:
+        for i in range (0,4):
+            x_jets[i]=correlation(x_jets[i])
+    
+    return x_jets, y_jets, ind
