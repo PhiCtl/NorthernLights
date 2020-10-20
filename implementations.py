@@ -3,6 +3,19 @@ import numpy as np
 from utils import compute_loss, compute_gradient
 from data_preprocessing import *
 
+#-----------------------------------lEAST SQUQRES-----------------------------------------------------#
+def least_squares(y, tx):
+    """calculate the least squares solution."""
+    #Find w
+    inv_=np.linalg.inv(np.dot(tx.T,tx)) 
+    w_opt=np.dot(np.dot(inv_,tx.T),y.T)
+    
+    #compute loss
+    e=(y-tx @ w_opt)**2
+    mse=(1/len(y))*(sum(e))
+    loss = np.sqrt(2 * mse)
+    return w_opt,loss
+
 #-----------------------------------LEAST SQUARES GRADIENT DESCENT--------------------------------------------------------------------#
 
 
@@ -96,3 +109,28 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
         w = w - (gamma * grad)
         
     return w,sum_loss
+
+#----------------------------------------REGULARIZED LOGISTIC REGRESSION---------------------#
+
+
+def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_):
+   
+    """
+    Do one step of gradient descent, using the penalized logistic regression.
+    Return the loss and updated w.
+    """
+   
+    
+    for n_iter in range(max_iters):
+        losses = []   
+        loss,w=learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
+        
+        if (n_iter % 100 == 0):
+            # print average loss for the last print_every iterations
+            print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
+            
+        losses.append(loss)
+        if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
+            break
+           
+    return w, loss
