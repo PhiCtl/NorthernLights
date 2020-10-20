@@ -86,6 +86,26 @@ def standard(x):
 
 
 
+#-------------------------------------CORRELATION------------------------------------------------------------------------------#
+
+"Correlation function -> returns x with deleted highly correlated features"
 
 
-
+def correlation(x):
+    "Calculate correlation and delete one of the 2 features if abs(correlation) is above 0.95"
+    #calculate correlation between different features, r is the absolute value of correlation matrix
+    r = abs(np.corrcoef(x.T)) 
+    #Find index where abs(r) is close to 1
+    index=np.argwhere(r >=0.95)
+    #remove redundant data
+    n=int(x.shape[1]/2)
+    index=index[index[:,0]<=n+1]
+    
+    #delete one of the 2 features strongly correlated
+    deleted_column=[]
+    
+    for i in range(0,index.shape[0]-2):
+        if index[i,0] not in deleted_column and index[i,0]!=index[i,1]:
+            x=np.delete(x, index[i,0],1)
+            deleted_column=np.append(deleted_column, index[i,0])
+    return x

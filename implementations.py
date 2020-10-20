@@ -33,6 +33,31 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
 
     return losses[-1], ws[-1]
 
+#-----------------------------------LEAST SQUARES STOCHASTIC GRADIENT DESCENT--------------------------------------------------------------------#
+
+
+"Least_squares method using stochastic gradient descent"
+
+def least_square_SGD(y, tx, iter_, batch_size,  gamma):
+    
+    """linear regression using stochastic Gradient descent algorithm.
+    Returns w and losses"""
+    
+    # Building the initial model
+    w,loss=least_squares(y,tx)
+    losses=np.array([loss])
+    # Performing Gradient Descent
+    for n in range(iter_):
+        for y_b, tx_b in batch_iter(y, tx, batch_size, num_batches=1):
+             #compute stochastic gradient and error
+            grad,e=compute_stoch_gradient(y_b, tx_b,w)
+            #new w
+            w = w - gamma * grad
+            np.append(losses, y - tx.dot(w))
+            
+                
+    return w,losses
+
 #--------------------------------------------------RIDGE REGRESSION-----------------------------------------------------------------------#
 
 " Ridge regression using normal equations"
@@ -51,3 +76,23 @@ def ridge_regression(y, tx, lambda_):
     
     #returns the root mean squared error associated with the optimal weights
     return rmse, w_opt
+
+
+#--------------------------------------------------LOGISTIC REGRESSION-----------------------------------------------------------------------#
+
+"Logistic regression"
+
+def logistic_regression(y, tx, initial_w, max_iters, gamma):
+    
+    """logistic regression.
+    Returns w_opt and sum_of_loss"""
+    y[np.where(y == -1)] = 0 #change (-1,1) to (0,1)
+    w=initial_w
+    sum_loss=0
+    for n_iter in range(max_iters):
+        grad= compute_log_grad(y, tx, w)
+        loss = compute_log_loss(y, tx, w)
+        sum_loss += loss
+        w = w - (gamma * grad)
+        
+    return w,sum_loss
