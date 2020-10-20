@@ -227,3 +227,26 @@ def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
     w=w-gamma*gradient
 
     return loss, w
+
+#------------------------RUN FUNCTION---------------------------------------------------#
+def best_w(y,x,method,best_lambda,best_deg):
+    
+    tx_tr_opt = build_poly(x,best_deg)
+    
+    # Compute optimal weight
+    initial_w = np.zeros((tx_tr_opt.shape[1],))
+    w_opt,_=choose_your_methods(method, y, tx_tr_opt, best_lambda, gamma, max_iters, batch_size)
+    
+    return w_opt
+
+def compute_accuracy(y_test,jet_list,index_te,w_opt_list):
+    
+    #compute y_pred for each jet 
+    for jet in jet_list :
+        for in w_opt_list:
+            y_pred = jet.dot(w)
+            y_pred_list.append(y_pred)
+    
+    y_predict = combine_jets(y_pred_list, index_te)
+
+    accuracy_2(y_test, y_predict)
