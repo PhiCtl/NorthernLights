@@ -4,7 +4,7 @@ import numpy as np
 
 #-------------------------------------------------LOSSES-------------------------------------------------------------#
 
-def compute_loss_MSE(y, tx, w, lambda_ = 0, L1_reg = False):
+def compute_loss_MSE(y, tx, w, L1_reg, lambda_):
     """Calculate the MSE loss
     """
     e = y - tx.dot(w)
@@ -14,18 +14,18 @@ def compute_loss_MSE(y, tx, w, lambda_ = 0, L1_reg = False):
         return 0.5*np.mean(e**2) + lambda_*(np.linalg.norm(w)**2)
 
 
-def compute_RMSE(y, tx, w, lambda_ = 0):
+def compute_RMSE(y, tx, w, L1_reg, lambda_):
     "Calculate the RMSE loss"
-    return np.sqrt(2*compute_loss_MSE(y, tx, w, lambda_ = lambda_))
+    return np.sqrt(2*compute_loss_MSE(y, tx, w, L1_reg, lambda_))
 
 
-def compute_loss_logREG(y, tx, w, lambda_ = 0):
+def compute_loss_logREG(y, tx, w, lambda_):
     """compute the loss: negative log likelihood."""
     L1 = y.T.dot(tx.dot(w))
     L2 = np.sum(np.log(np.ones(tx.shape[0]) + np.exp(tx.dot(w)))) 
-    return L1 + L2 + lambda_*np.linalg.norm(w)**2
+    return L1 + L2 + lambda_/2*np.linalg.norm(w)**2
 
-def compute_loss_MAE(y, tx, w, lambda_ = 0):
+def compute_loss_MAE(y, tx, w):
     """Calculate the loss.
     You can calculate the loss using mae.
     """
@@ -33,15 +33,17 @@ def compute_loss_MAE(y, tx, w, lambda_ = 0):
     return (1/len(y) * np.sum(np.abs(e), axis = 0) )
 
 def compute_loss(y, tx, w, loss_type = 'MSE', lbd = 0, L1 = False):
+    """Fooo"""
+    
     
     if loss_type == 'RMSE':
-        return compute_RMSE(y, tx, w, lambda_ = lbd)
+        return compute_RMSE(y, tx, w, L1, lbd)
     if loss_type == 'MAE':
-        return compute_loss_MAE(y, tx, w, lambda_ = lbd)
+        return compute_loss_MAE(y, tx, w)
     if loss_type == 'logREG':
-        return compute_loss_logREG(y, tx, w, lambda_ = lbd)  
+        return compute_loss_logREG(y, tx, w, lbd)  
     
-    return compute_loss_MSE(y, tx, w, lambda_ = lbd,  L1_reg = L1)
+    return compute_loss_MSE(y, tx, w, L1, lbd)
 
 #---------------------------------------GRADIENT--------------------------------------------------------#
 
@@ -175,8 +177,8 @@ def elements_logistic_regression(y, tx, w):
  
     # return loss, gradient, and Hessian: TODO
     
-    loss=calculate_loss_logREG(y, tx, w)
-    gradient=calculate_gradient_logREG(y, tx, w)
+    loss=compute_loss(y, tx, w, 'logREG')
+    gradient=compute_gradient(y, tx, w, 6)
     hessian=calculate_hessian(y, tx, w)
     return loss, gradient, hessian
     
@@ -189,10 +191,10 @@ def learning_by_gradient_descent(y, tx, w, gamma):
     """
     # ***************************************************
     # compute the loss: 
-    loss=calculate_loss_logREG(y, tx, w)
+    loss=compute_loss(y, tx, w, 'logREG')
   
     # compute the gradient: 
-    gradient=calculate_gradient_logREG(y, tx, w)
+    gradient=compute_gradient(y, tx, w, 6)
     # ***************************************************
 
     # update w
@@ -228,25 +230,4 @@ def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
 
     return loss, w
 
-#------------------------RUN FUNCTION---------------------------------------------------#
-def best_w(y,x,method,best_lambda,best_deg):
-    
-    tx_tr_opt = build_poly(x,best_deg)
-    
-    # Compute optimal weight
-    initial_w = np.zeros((tx_tr_opt.shape[1],))
-    w_opt,_=choose_your_methods(method, y, tx_tr_opt, best_lambda, gamma, max_iters, batch_size)
-    
-    return w_opt
-
-def compute_accuracy(y_test,jet_list,index_te,w_opt_list):
-    
-    #compute y_pred for each jet 
-    for jet in jet_list :
-        for in w_opt_list:
-            y_pred = jet.dot(w)
-            y_pred_list.append(y_pred)
-    
-    y_predict = combine_jets(y_pred_list, index_te)
-
-    accuracy_2(y_test, y_predict)
+#--------------------------------------------------------------------------------------------------------#
