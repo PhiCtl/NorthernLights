@@ -104,8 +104,8 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     w=initial_w
     sum_loss=0
     for n_iter in range(max_iters):
-        grad= compute_log_grad(y, tx, w)
-        loss = compute_log_loss(y, tx, w)
+        grad= compute_grad(y, tx, w, 6)
+        loss = compute_loss(y, tx, w, 'logREG')
         sum_loss += loss
         w = w - (gamma * grad)
         
