@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Exercise 3.
-
-Split the dataset based on the given ratio.
-"""
-
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
-from data_preprocessing import split_data
+from utils import compute_loss, build_poly
 from implementations import *
-from utils import build_poly,compute_loss,accuracy,predict_labels,compute_RMSE
+from plots import *
 
 
-
+#---------------------------------CROSS VALIDATION UTILS-----------------------------------------------------------#
 def build_k_indices(y, k_fold, seed):
     """build k indices for k-fold."""
     num_row = y.shape[0]
@@ -22,247 +17,217 @@ def build_k_indices(y, k_fold, seed):
     k_indices = [indices[k * interval: (k + 1) * interval]
                  for k in range(k_fold)]
     return np.array(k_indices)
-    
 
-def cross_validation(y, x, k_indices, k,degree,method=1,lambda_=0,gamma=0.1, max_iters=100,batch_size=1,loss_type = 'MSE',L1= False,seed=1):
+
+
+#---------------- GENERAL CROSS VALIDATION------------------------------------#
+
+def cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method):
+    """Returns loss of choosen method for training and test sets."""
+
     
-    #Est ce que je met une valeur par defaut ?
+    #get the right indices:
+    k_te = k_indices[k]
+    k_te = k_indices[k]
+    k_tr = k_indices[k_indices != k_te]
     
-    """return the loss of ridge regression."""
- 
-    # get k'th subgroup in test, others in train: TODO
+    # get k'th subgroup in test, others in train: 
+    y_test = y[k_te]
+    x_test = x[k_te]
+    y_tr   = y[k_tr]  
+    x_tr   = x[k_tr]
+    
+    # form data with polynomial degree: 
+    x_augm_tr = build_poly(x_tr, degree)
+    x_augm_test = build_poly(x_test, degree)
    
-    tr_ind=k_indices[k]
-    te_ind=k_indices[k_indices!=tr_ind]
+    # apply method to get w_opt and compute loss for train and test data 
+    w_opt, loss_tr, l_type = choose_your_methods(method, y_tr, x_augm_tr, lambda_, gamma) 
+    #loss depends on choosen method
     
-    x_tr=x[tr_ind]
-    x_te=x[te_ind]
-        
-    y_tr=y[tr_ind]
-    y_te =y[te_ind]
+    #if we're dealing with least squares GD, SGD, or normal equations, 
+    #we don't need to compute the L2- regularization
+    if (method == 5) or (method == 6):
+        loss_te =compute_loss(y_test, x_augm_test, w_opt, loss_type = l_type, lbd = lambda_)
+                                          
+     
+    #compute the right loss
+    loss_te =compute_loss(y_test, x_augm_test, w_opt, loss_type = l_type)
     
-    
-    # form data with polynomial degree: TODO
-    tx_tr = build_poly(x_tr, degree)
-    tx_te = build_poly(x_te, degree)
- 
-    # Calcul of the weight 
-    initial_w = np.zeros((tx_tr.shape[1],))
-    w=choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters, batch_size)
-    
-    # calculate the loss for train and test data: TODO
-    if method==5 or method==6:
-        loss_tr=compute_loss(y_tr, tx_tr, w,loss_type,lambda_,L1)
-        loss_te=compute_loss(y_tr, tx_tr, w,loss_type,lambda_,L1)
-    
-    else:
-        loss_tr=compute_loss(y_tr, tx_tr, w,loss_type,0,L1)
-        loss_te=compute_loss(y_tr, tx_tr, w,loss_type,0,L1)
-    
-    #Compute accuracy of the model
-    accuracy_te=accuracy(y_te, tx_te,w)
-    
-    # ***************************************************
-
-    return loss_tr, loss_te, accuracy_te
+    return loss_tr, loss_te
 
 
 
-
-def cross_validation_mean_fold(y, x, k_indices, k_fold,degree, method, lambda_, gamma, max_iters,batch_size,loss_type,L1,seed):
+def select_best_degree(y, x, method, seed = 1, k_fold = 4, degrees, lambdas, gamma, screening_plot = False, variance_plot = False, verbose = False):
     
-    # define lists to store the loss of training data and test data
-    losses_tr=[]
-    losses_te=[]
-
-    accuracy_te=[]
-    variances = []
+    """Returns best degree based on loss comparisons across lambdas (k-folds cross validation)"""
+    """Returns also associated lambda and RMSE loss"""
     
-    for j in range(k_fold):
-        #temporary lists for test and training losses
-        loss_tr,loss_te,acc_te=cross_validation(y, x, k_indices, j,degree, method, lambda_, gamma, max_iters,batch_size,loss_type,L1,seed)
-        
-        losses_tr.append(loss_tr)
-        losses_te.append(loss_te)
-        
-        accuracy_te.append(acc_te) 
-        
-        variances.append(loss_te)
-        
-        
-    #mean of the loss and accuracy on the k folds  
-    
-    mean_accuracy_te = np.mean(accuracy_te)
-    mean_loss_tr = np.mean(losses_tr)
-    mean_loss_te  = np.mean(losses_te)
-    
-    #if loss went too high (->inf or nan) because of divergence, ignore it
-    mean_loss_tr = np.ma.masked_array(mean_loss_tr, np.isnan(mean_loss_tr))
-    mean_loss_te = np.ma.masked_array(mean_loss_te, np.isnan(mean_loss_te))
-    
-    return mean_loss_tr,mean_loss_te,mean_accuracy_te
-
-
-
-def best_lambda_cross_validation(y, x, k_indices,k_fold,degree, method, lambdas, gamma, max_iters,batch_size,loss_type,L1,seed):
-    """Returns best lambda for a given degree (based on smallest RMSE) and associated RMSE loss"""
-    #lambda range
-    #lambdas = np.logspace(-4, 0, 30)
     
     # split data in k fold
-    #k_indices = build_k_indices(y, k_fold, seed)
+    k_indices = build_k_indices(y, k_fold, seed)
     
     # define lists to store the loss of training data and test data
-    losses_tr =np.zeros(len(lambdas))
-    losses_te = np.zeros(len(lambdas))
+    rmse_tr = []
+    rmse_te = []
+    best_lambdas = []
     
-    accuracy_te = np.zeros(len(lambdas))
-
-    # cross validation: loop for each lambda on the k folds
-    for ind_lam, lambda_ in enumerate(lambdas):
-        
-        #temporary lists for test and training losses
-        loss_tr,loss_te,acc_te=cross_validation_mean_fold(y, x, k_indices, k_fold,degree, method,lambda_,  gamma, max_iters,batch_size,loss_type,L1,seed)
-        
-        losses_tr[ind_lam]=loss_tr
-        losses_te[ind_lam]=loss_te
+    #define array to store loss along degrees (for plotting)
+    rmse_te_plot = np.empty((len(degrees), len(lambdas)))
+    
+    # k-fold cross validation: loop for each degree on each lambda on the k folds
+    for d, deg in enumerate(degrees):
+       #temporary lists for test and training losses for each lambda
+        rmse_tr_l = []
+        rmse_te_l = []
             
+        for l, lambda_ in enumerate(lambdas):
+            #temporary lists for test and training losses for each k_fold
+            rmse_tr_k = []
+            rmse_te_k = []
+            
+            for k in range(k_fold):
+                #get rmse losses for test and training data, 
+                #for ridge_regression with hyperparams (lambda_, degree)
+                loss_tr, loss_te = cross_validation(y, x, k_indices, k, lambda_, deg, gamma, method)
+                rmse_tr_k.append(loss_tr)
+                rmse_te_k.append(loss_te)
+                
+            #mean of the loss on the k folds for each lambda    
+            rmse_tr_l.append(np.mean(rmse_tr_k))
+            rmse_te_l.append(np.mean(rmse_te_k))
+            rmse_te_plot[d,l] = rmse_te_l[-1]
+                           
         
-        accuracy_te[ind_lam]=acc_te
-    plt.boxplot(loss_te)    
+        #select best lambda for each degree
+        ind_best_lambda = np.argmin(rmse_te_l)
+        best_lambdas.append(lambdas[ind_best_lambda])
         
-    #find optimal lambda
+        #remember best lambda loss
+        rmse_tr.append(rmse_tr_l[ind_best_lambda])
+        rmse_te.append(rmse_te_l[ind_best_lambda])
+        
+        if verbose:
+            #print degree loss
+            print("Current degree={degree}, loss={l}, best lambda={lbd}".format(degree=deg, l=rmse_te[-1], lbd = best_lambdas[-1]))
     
-    best_lambda_ = np.unravel_index(np.argmin(losses_te), losses_te.shape)
-    print("The best lambda is: ", lambdas[best_lambda_])
-   
-    #plot RMSE variance for each lambda
-    #fig, ax1 = plt.subplots()
-    #ax1.set_title('RMSE test data')
-    #ax1.boxplot(loss_te_plot.T)  
-    
-    cross_validation_visualization(lambdas, losses_tr, losses_te)
-    
-    return best_lambda,accuracy_te[np.argmin(losses_te)],losses_te[np.argmin(losses_te)]
+    if screening_plot:
+        cross_validation_visualization(degrees, rmse_tr, rmse_te, 'degree')
+        
+    if variance_plot:
+        #plot RMSE variance for each degree
+        plot_variance(rmse_te_plot, 'degree')
+                            
+                            
+    #find best degree
+    ind_min = np.argmin(rmse_te)
+    best_degree = degrees[ind_min]
+    print("Best degree ={degree}, loss for k-folds cross validation={l}, best lambda={lbd}".format(degree=best_degree, l=rmse_te[ind_min], lbd = best_lambdas[ind_min]))
+                            
+    return best_degree, rmse_te[ind_min], best_lambdas[ind_min], rmse_te_plot
+        
 
 
-
-
-def best_degree_cross_validation(y, x, k_indices,k_fold,degrees, method, lambda_, gamma, max_iters,batch_size,loss_type,L1,seed):
-    """Returns best lambda for a given degree (based on smallest RMSE) and associated RMSE loss"""
-    #degree range
-    #degrees = np.arange(2, 3)
+def select_best_lambda(y, x, method, seed = 1, k_fold = 10, degrees, lambdas, gamma, screening_plot = False, variance_plot = False, verbose = False):
     
-    # split data in k fold
-    #k_indices = build_k_indices(y, k_fold, seed)
+    """Returns best lambda across a degree range (based on smallest loss, depending on choosen method) and associated  loss"""
+    
+     # split data in k fold
+    k_indices = build_k_indices(y, k_fold, seed)
     
     # define lists to store the loss of training data and test data
-    losses_tr =np.zeros(len(degrees))
-    losses_te = np.zeros(len(degrees))
+    rmse_tr = []
+    rmse_te = []
+    best_degrees = []
     
+    #define array to store loss along degrees (for plotting)
+    rmse_te_plot = np.empty((len(lambdas),len(degrees)))
     
-    accuracy_te = np.zeros(len(degrees))
-
-    # cross validation: loop for each lambda on the k folds
-    for ind_deg,deg in enumerate(degrees):
+    # k-fold cross validation: loop for each degree on each lambda on the k folds
+    for l, lambda_ in enumerate(lambdas):
+       #temporary lists for test and training losses for each lambda
+        rmse_tr_l = []
+        rmse_te_l = []
+            
+        for d, deg in enumerate(degrees):
+            #temporary lists for test and training losses for each k_fold
+            rmse_tr_k = []
+            rmse_te_k = []
+            
+            for k in range(k_fold):
+                #get rmse losses for test and training data, 
+                #for ridge_regression with hyperparams (lambda_, degree)
+                loss_tr, loss_te = cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method)
+                rmse_tr_k.append(loss_tr)
+                rmse_te_k.append(loss_te)
+                
+            #mean of the loss on the k folds for each lambda    
+            rmse_tr_l.append(np.mean(rmse_tr_k))
+            rmse_te_l.append(np.mean(rmse_te_k))
+            rmse_te_plot[l,d] = rmse_te_l[-1]
+                           
         
-        #temporary lists for test and training losses
-        loss_tr,loss_te,acc_te=cross_validation_mean_fold(y, x, k_indices, k_fold,deg,method , lambda_, gamma, max_iters,batch_size,loss_type,L1,seed)
+        #select best lambda for each degree
+        ind_best_degree = np.argmin(rmse_te_l)
+        best_degrees.append(degrees[ind_best_degree])
         
-        losses_tr[ind_deg]=loss_tr
-        losses_te[ind_deg]=loss_te
-            
-        accuracy_te[ind_deg]=acc_te
+        #remember best lambda loss
+        rmse_tr.append(rmse_tr_l[ind_best_degree])
+        rmse_te.append(rmse_te_l[ind_best_degree])
         
+        if verbose:
+            #print degree loss
+            print("Current lambda={lbd}, loss={l}, best degree={deg}".format(lbd =lambda_, l=rmse_te[-1], deg = best_degrees[-1]))
+    
+    if screening_plot:
+        cross_validation_visualization(degrees, rmse_tr, rmse_te, 'degree')
         
-    #find optimal degree
-    
-    best_degree = np.unravel_index(np.argmin(losses_te), losses_te.shape)
-    print("The best degree is: ", degrees[best_degree])
-   
-    
-    
-    cross_validation_visualization(degrees, losses_tr, losses_te)
-    
-    return best_degree,accuracy_te[np.argmin(losses_te)],losses_te[np.argmin(losses_te)]
-    
-def best_parameters_cross_validation(y, x, k_indices, k_fold,degrees,method, lambdas, gamma,max_iters,batch_size,loss_type,L1,seed):
-    
-    # define lists to store the loss of training data and test data
-    losses_tr =np.zeros((len(degrees), len(lambdas)))
-    losses_te = np.zeros((len(degrees), len(lambdas)))
-    
+    if variance_plot:
+        #plot RMSE variance for each degree
+        plot_variance(rmse_te_plot, 'degree')
+                            
+                            
+    #find best lambda
+    ind_min = np.argmin(rmse_te)
+    best_lambda = lambda_[ind_min]
+    print("Best lambda ={lbd}, loss for k-folds cross validation={l}, best degree={deg}".format(lbd =best_lambda, l=rmse_te[ind_min], deg = best_degrees[ind_min]))
+                            
+    return best_lambda, rmse_te[ind_min], best_degrees[ind_min], rmse_te_plot
 
-    accuracy_te = np.zeros((len(degrees), len(lambdas)))
+#-----------------------------------------------------------------------------------------------------#
 
-
-    # cross validation over different degrees and for different lambdas in k folds
-    for ind_deg,deg in enumerate (degrees):
-        for ind_lam,lambda_ in enumerate(lambdas):
-            #temporary lists for test and training losses
-            loss_tr,loss_te,acc_te=cross_validation_mean_fold(y, x, k_indices, k_fold,  deg,method,lambda_, gamma, max_iters,batch_size,loss_type,L1,seed)
-            
-            losses_tr[ind_deg,ind_lam]=loss_tr
-            losses_te[ind_deg,ind_lam]=loss_te
-            
-         
-            accuracy_te[ind_deg,ind_lam]=acc_te
-            
-    #visualization
-            
-    cross_validation_visualization(lambdas,losses_tr[0, :],losses_te[0, :])       
-    cross_validation_visualization(degrees, losses_tr[:, 0],losses_te[:, 0])
-    
-    
-    #unravel_index return de position of np.argmin(losses_te) in the table of shape "losses_te.shape"
-    best_value = np.unravel_index(np.argmin(losses_te), losses_te.shape)
-            
-    print("Best degree: %d, with lambda %.2E " %(degrees[best_value[0]],lambdas[best_value[1]]))
-    
-    return best_value,accuracy_te[np.argmin(losses_te)],losses_te[np.argmin(losses_te)]
-
-
-
-def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters, batch_size):
+def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 200, batch_size = 1):
     
    # create initial w for methods using it
         initial_w = np.zeros(tx_tr.shape[1])
 
         if method == 1:
             # Use least squares method
-            w,_= least_squares(y_tr,tx_tr)
-            return w
+            w, loss = least_squares(y_tr,tx_tr)
+            return w, loss, 'RMSE'
             
         if method == 2:
             # Use least squares GD
-            w,_ = least_squares_GD(y_tr, tx_tr, initial_w,max_iters,gamma)
-            return w
+            w, loss = least_squares_GD(y_tr, tx_tr, initial_w,max_iters,gamma)
+            return w, loss, 'RMSE'
             
         if method == 3:
             # Use least squares SGD
-            w,_ = least_squares_SGD(y_tr, tx_tr, initial_w, batch_size, max_iters, gamma)
-            return w
+            w, loss = least_squares_SGD(y_tr, tx_tr, max_iters, batch_size, gamma)
+            return w, loss, 'RMSE'
             
         if method == 4:
             # Use ridge regression
-            w=ridge_regression(y_tr, tx_tr, lambda_)
-            return w
+            w, loss =ridge_regression(y_tr, tx_tr, lambda_)
+            return w, loss, 'RMSE'
             
         if method == 5:
             # Use logistic regression
-            w,_ = logistic_regression(y_tr, tx_tr, initial_w, max_iters, gamma)
-            return w
+            w, loss = logistic_regression(y_tr, tx_tr, initial_w, max_iters, gamma)
+            return w, loss, 'logREG'
             
         if method == 6:
             # Use regularized logistic regression
-            w,_ = reg_logistic_regression(y_tr, tx_tr,initial_w, gamma, max_iters, lambda_)
-            return w
-            
-    
-    
-
-
-
-
-
+            w, loss = reg_logistic_regression(y_tr, tx_tr,initial_w, gamma, max_iters, lambda_)
+            return w, loss, 'logREG'
 
