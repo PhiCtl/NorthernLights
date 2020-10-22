@@ -39,3 +39,6 @@ def select_best_parameter(y, x, method, param_type, seed = 1 , k_fold = 10, degr
     
     if param_type == 'lambda':
         return select_best_lambda(y, x, method, seed, k_fold, degrees, lambdas, gamma)
+    
+    """"if param_type == 'gammas over degrees':
+        return select_best_gamma"""

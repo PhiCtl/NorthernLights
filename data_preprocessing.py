@@ -67,22 +67,27 @@ def get_jets(x, y, cat_id, undefined_indices, list_ = False):
 
 "Standardization function -> returns matrix of values with zero mean and standard deviation of 1"
 
-def standard(x):
-    """Returns a standardized matrix, replacing "-999" entries by median (sensitivity to outliers) of matrix"""
+def preprocessing_data(x, normalization = True, standardization = False):
+    """Returns normalized or standardized matrix"""
     x[x == -999] = np.nan
     
     #setting nan values to median over all datapoints for a specific feature: worked but reduced to 0 when standardizing
+    
     nan_indices = np.argwhere(np.isnan(x))
     x_med = np.nanmedian(x,axis = 0)
     x_mean = np.nanmean(x, axis = 0)
     
     for ind in nan_indices:
-        #med_val = x_med[ind[1]]
-        x[ind[0],ind[1]] = 0
+        med_val = x_med[ind[1]]
+        x[ind[0],ind[1]] = med_val
     
-    std =  (x - x_med) / x_mean
+    if standardization:
+        X =  (x - x_med) / x_mean
+    if normalization:
+        column_sum = x.sum(axis = 0)
+        X = x / column_sum[np.newaxis,:]
     
-    return std
+    return X
 
 
 

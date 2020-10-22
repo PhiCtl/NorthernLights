@@ -44,7 +44,7 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
         ws.append(w)
         losses.append(loss)
 
-    return losses[-1], ws[-1]
+    return ws[-1], losses[-1]
 
 #-----------------------------------LEAST SQUARES STOCHASTIC GRADIENT DESCENT--------------------------------------------------------------------#
 
@@ -57,8 +57,8 @@ def least_square_SGD(y, tx, iter_, batch_size,  gamma):
     Returns w and losses"""
     
     # Building the initial model
-    w,loss=least_squares(y,tx)
-    losses=np.array([loss])
+    w =  np.zeros((tx.shape[1],1))
+    losses=[]
     # Performing Gradient Descent
     for n in range(iter_):
         for y_b, tx_b in batch_iter(y, tx, batch_size, num_batches=1):
@@ -67,10 +67,10 @@ def least_square_SGD(y, tx, iter_, batch_size,  gamma):
             #new w
             w = w - gamma * grad
             #loss
-            np.append(losses, compute_loss(y_b, tx_b, w, 'RMSE'))
+            losses.append(compute_loss(y_b, tx_b, w, 'RMSE'))
             
                 
-    return w,losses
+    return w,losses[-1]
 
 #--------------------------------------------------RIDGE REGRESSION-----------------------------------------------------------------------#
 
