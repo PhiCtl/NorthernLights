@@ -89,7 +89,7 @@ def ridge_regression(y, tx, lambda_):
     rmse = compute_loss(y, tx, w_opt, loss_type = 'RMSE')
     
     #returns the root mean squared error associated with the optimal weights
-    return rmse, w_opt
+    return w_opt, rmse
 
 
 #--------------------------------------------------LOGISTIC REGRESSION-----------------------------------------------------------------------#
