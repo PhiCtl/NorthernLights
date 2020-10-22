@@ -22,7 +22,7 @@ def build_k_indices(y, k_fold, seed):
 
 #---------------- GENERAL CROSS VALIDATION------------------------------------#
 
-def cross_validation(y, x, k_indices, k, lambda_, degree, method):
+def cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method):
     """Returns loss of choosen method for training and test sets."""
 
     
@@ -42,7 +42,7 @@ def cross_validation(y, x, k_indices, k, lambda_, degree, method):
     x_augm_test = build_poly(x_test, degree)
    
     # apply method to get w_opt and compute loss for train and test data 
-    w_opt, loss_tr, l_type = choose_your_methods(method, y_tr, x_augm_tr, lambda_) 
+    w_opt, loss_tr, l_type = choose_your_methods(method, y_tr, x_augm_tr, lambda_, gamma) 
     #loss depends on choosen method
     
     #if we're dealing with least squares GD, SGD, or normal equations, 
@@ -58,7 +58,7 @@ def cross_validation(y, x, k_indices, k, lambda_, degree, method):
 
 
 
-def select_best_degree(y, x, method, seed = 1, k_fold = 4, degrees = np.arange(1,10,1), lambdas = np.logspace(-20,0,5), screening_plot = False, variance_plot = False, verbose = False):
+def select_best_degree(y, x, method, seed = 1, k_fold = 4, degrees, lambdas, gamma, screening_plot = False, variance_plot = False, verbose = False):
     
     """Returns best degree based on loss comparisons across lambdas (k-folds cross validation)"""
     """Returns also associated lambda and RMSE loss"""
@@ -89,7 +89,7 @@ def select_best_degree(y, x, method, seed = 1, k_fold = 4, degrees = np.arange(1
             for k in range(k_fold):
                 #get rmse losses for test and training data, 
                 #for ridge_regression with hyperparams (lambda_, degree)
-                loss_tr, loss_te = cross_validation(y, x, k_indices, k, lambda_, deg, method)
+                loss_tr, loss_te = cross_validation(y, x, k_indices, k, lambda_, deg, gamma, method)
                 rmse_tr_k.append(loss_tr)
                 rmse_te_k.append(loss_te)
                 
@@ -128,7 +128,7 @@ def select_best_degree(y, x, method, seed = 1, k_fold = 4, degrees = np.arange(1
         
 
 
-def select_best_lambda(y, x, method, seed = 1, k_fold = 10, degrees = np.arange(1,10,1), lambdas = np.logspace(-10,0,5), screening_plot = False, variance_plot = False, verbose = False):
+def select_best_lambda(y, x, method, seed = 1, k_fold = 10, degrees, lambdas, gamma, screening_plot = False, variance_plot = False, verbose = False):
     
     """Returns best lambda across a degree range (based on smallest loss, depending on choosen method) and associated  loss"""
     
@@ -157,7 +157,7 @@ def select_best_lambda(y, x, method, seed = 1, k_fold = 10, degrees = np.arange(
             for k in range(k_fold):
                 #get rmse losses for test and training data, 
                 #for ridge_regression with hyperparams (lambda_, degree)
-                loss_tr, loss_te = cross_validation(y, x, k_indices, k, lambda_, degree, method)
+                loss_tr, loss_te = cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method)
                 rmse_tr_k.append(loss_tr)
                 rmse_te_k.append(loss_te)
                 
@@ -196,7 +196,7 @@ def select_best_lambda(y, x, method, seed = 1, k_fold = 10, degrees = np.arange(
 
 #-----------------------------------------------------------------------------------------------------#
 
-def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma = 0.000001, max_iters = 200, batch_size = 1):
+def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 200, batch_size = 1):
     
    # create initial w for methods using it
         initial_w = np.zeros(tx_tr.shape[1])
