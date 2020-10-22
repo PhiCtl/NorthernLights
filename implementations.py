@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from utils import compute_loss, compute_gradient, learning_by_penalized_gradient
+from utils import compute_loss, compute_gradient
 from data_preprocessing import *
 
 #-----------------------------------lEAST SQUQRES-----------------------------------------------------#
@@ -36,7 +36,7 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
         #compute current gradient and loss rmse
         w = ws[-1]
         g = compute_gradient(y, tx, w, 2)
-        loss = compute_loss(y, tx, w, loss_type = 'RMSE')
+        loss = compute_loss(y, tx, w, loss_type = 'RMSE' )
         #update w
         w = w - gamma*g
         
@@ -44,17 +44,17 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
         ws.append(w)
         losses.append(loss)
 
-    return ws[-1], losses[-1]
+    return losses[-1], ws[-1]
 
 #-----------------------------------LEAST SQUARES STOCHASTIC GRADIENT DESCENT--------------------------------------------------------------------#
 
 
 "Least_squares method using stochastic gradient descent"
-"""
+
 def least_square_SGD(y, tx, iter_, batch_size,  gamma):
     
-    #linear regression using stochastic Gradient descent algorithm.
-    Returns w and losses#
+    """linear regression using stochastic Gradient descent algorithm.
+    Returns w and losses"""
     
     # Building the initial model
     w,loss=least_squares(y,tx)
@@ -63,14 +63,14 @@ def least_square_SGD(y, tx, iter_, batch_size,  gamma):
     for n in range(iter_):
         for y_b, tx_b in batch_iter(y, tx, batch_size, num_batches=1):
              #compute stochastic gradient and error
-            grad=compute_gradient(y_b, tx_b, w, 3)
-            e = 
+            grad=compute_gradient(y, tx, w, 2, batch_s = 1)
             #new w
             w = w - gamma * grad
-            np.append(losses, y - tx.dot(w))
+            #loss
+            np.append(losses, compute_loss(y_b, tx_b, w, 'RMSE'))
             
                 
-    return w,losses"""
+    return w,losses
 
 #--------------------------------------------------RIDGE REGRESSION-----------------------------------------------------------------------#
 
@@ -86,10 +86,10 @@ def ridge_regression(y, tx, lambda_):
     b = tx.T.dot(y)
     w_opt = np.linalg.solve(A,b)
     
-    rmse = compute_loss(y, tx, w_opt, loss_type = 'RMSE', lbd = lambda_)
+    rmse = compute_loss(y, tx, w_opt, loss_type = 'RMSE')
     
     #returns the root mean squared error associated with the optimal weights
-    return w_opt, rmse
+    return rmse, w_opt
 
 
 #--------------------------------------------------LOGISTIC REGRESSION-----------------------------------------------------------------------#
