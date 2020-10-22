@@ -18,12 +18,9 @@ def least_squares(y, tx):
 
 #-----------------------------------LEAST SQUARES GRADIENT DESCENT--------------------------------------------------------------------#
 
-
-"Least_squares method using gradient descent"
-
 def least_squares_GD(y, tx, initial_w, max_iters, gamma):
     
-    """linear regression using Gradient descent algorithm.
+    """Least_squares method using gradient descent algorithm.
     Returns RMSE and w_opt"""
    
     # Define parameters to store w and loss
@@ -48,13 +45,8 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
 
 #-----------------------------------LEAST SQUARES STOCHASTIC GRADIENT DESCENT--------------------------------------------------------------------#
 
-
-"Least_squares method using stochastic gradient descent"
-
 def least_square_SGD(y, tx, iter_, batch_size,  gamma):
-    
-    """linear regression using stochastic Gradient descent algorithm.
-    Returns w and losses"""
+    "Least_squares method using stochastic gradient descent"
     
     # Building the initial model
     w =  np.zeros((tx.shape[1],1))
@@ -74,10 +66,8 @@ def least_square_SGD(y, tx, iter_, batch_size,  gamma):
 
 #--------------------------------------------------RIDGE REGRESSION-----------------------------------------------------------------------#
 
-" Ridge regression using normal equations"
-
 def ridge_regression(y, tx, lambda_):
-    """implement ridge regression.
+    """Ridge regression using normal equations"
     Returns RMSE and w_opt"""
     
     #optimal weights calculated explicitly
@@ -94,7 +84,6 @@ def ridge_regression(y, tx, lambda_):
 
 #--------------------------------------------------LOGISTIC REGRESSION-----------------------------------------------------------------------#
 
-"Logistic regression"
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
     
@@ -117,21 +106,33 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_):
    
     """
-    Do one step of gradient descent, using the penalized logistic regression.
+    Penalized logistic regression using gradient descent algorithm.
     Return the loss and updated w.
     """
    
     losses=[]
+    
+    # Performing Gradient Descent
     for n_iter in range(max_iters):
-        losses = []   
-        loss,w=learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
+        
+        #Compute loss and gradient
+        loss=compute_loss(y, tx, w, 'logREG',lambda_)+lambda_*np.dot(w.T,w)
+        gradient=compute_gradient(y, tx, w, 6)+2*lambda_*w
+    
+        #update w
+        w=w-gamma*gradient
+        
         
         if (n_iter % 100 == 0):
             # print average loss for the last print_every iterations
             print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
-            
+    
+        #Store losses   
         losses.append(loss)
+        
+        #Check convergence
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
             break
            
     return w, loss
+
