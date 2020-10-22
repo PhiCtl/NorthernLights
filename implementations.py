@@ -121,7 +121,7 @@ def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_):
     Return the loss and updated w.
     """
    
-    
+    losses=[]
     for n_iter in range(max_iters):
         losses = []   
         loss,w=learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
