@@ -76,7 +76,7 @@ def ridge_regression(y, tx, lambda_):
     b = tx.T.dot(y)
     w_opt = np.linalg.solve(A,b)
     
-    rmse = compute_loss(y, tx, w_opt, loss_type = 'RMSE')
+    rmse = compute_loss(y, tx, w_opt, loss_type = 'RMSE', lbd = lambda_)
     
     #returns the root mean squared error associated with the optimal weights
     return w_opt, rmse
@@ -91,14 +91,14 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     Returns w_opt and sum_of_loss"""
     y[np.where(y == -1)] = 0 #change (-1,1) to (0,1)
     w=initial_w
-    sum_loss=0
+    losses = []
     for n_iter in range(max_iters):
-        grad= compute_grad(y, tx, w, 6)
+        grad= compute_gradient(y, tx, w, 6)
         loss = compute_loss(y, tx, w, 'logREG')
-        sum_loss += loss
+        losses.append(loss)
         w = w - (gamma * grad)
         
-    return w,sum_loss
+    return w, losses[-1]
 
 #----------------------------------------REGULARIZED LOGISTIC REGRESSION---------------------#
 
@@ -116,8 +116,8 @@ def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_):
     for n_iter in range(max_iters):
         
         #Compute loss and gradient
-        loss=compute_loss(y, tx, w, 'logREG',lambda_)+lambda_*np.dot(w.T,w)
-        gradient=compute_gradient(y, tx, w, 6)+2*lambda_*w
+        loss=compute_loss(y, tx, w, 'logREG',lambda_)
+        gradient=compute_gradient(y, tx, w, 6, lambda_)
     
         #update w
         w=w-gamma*gradient
