@@ -5,7 +5,7 @@ import numpy as np
 #-------------------------------------------------LOSSES-------------------------------------------------------------#
 
 def compute_loss_MSE(y, tx, w, L1_reg, lambda_):
-    """Calculate the MSE loss"""
+    """Calculate the MSE loss (with L2 regularization if lambda is not 0)"""
     e = y - tx.dot(w)
     if L1_reg:
         return 0.5*np.mean(e**2) + lambda_*np.linalg.norm(w,1)
@@ -20,9 +20,9 @@ def compute_RMSE(y, tx, w, L1_reg, lambda_):
 
 def compute_loss_logREG(y, tx, w, lambda_):
     """compute the loss: negative log likelihood."""
-    L1 = y.T.dot(tx.dot(w))
-    L2 = np.sum(np.log(np.ones(tx.shape[0]) + np.exp(tx.dot(w)))) 
-    return L1 + L2 + lambda_/2*np.linalg.norm(w)**2
+    sig = sigmoid(tx.dot(w))
+    loss = y.T.dot( np.log(sig) ) + (1 - y).T.dot( np.log(1-sig) )
+    return -np.sum(loss)/(tx.shape[0]) + np.squeeze(w.T.dot(w))*lambda_
 
 def compute_loss_MAE(y, tx, w):
     """Calculate the loss using mae """
@@ -30,7 +30,7 @@ def compute_loss_MAE(y, tx, w):
     return (1/len(y) * np.sum(np.abs(e), axis = 0) )
 
 def compute_loss(y, tx, w, loss_type = 'MSE', lbd = 0, L1 = False):
-    """Fooo"""
+    """Compute loss for all"""
     
     
     if loss_type == 'RMSE':
@@ -45,39 +45,28 @@ def compute_loss(y, tx, w, loss_type = 'MSE', lbd = 0, L1 = False):
 #---------------------------------------GRADIENT--------------------------------------------------------#
 
 def compute_LS_gradient(y, tx, w):
-    """Compute the gradient."""
+    """Compute the gradient of Least squares GD."""
 
     e = y - tx.dot(w)
     N = len(e)
     return -1/N * tx.T.dot(e)
 
 
-def compute_stoch_gradient(y, tx, w, batch_size):
-    """Compute a stochastic gradient from just few examples n and their corresponding y_n labels."""
-    g = np.array([0, 0])
-    
-    for minibatch_y, minibatch_tx in batch_iter(y, tx, batch_size):
-        g = g + compute_gradient(minibatch_y, minibatch_tx, w)
-    
-    return 1/batch_size * g
-
-def calculate_gradient_logREG(y, tx, w):
+def calculate_gradient_logREG(y, tx, w, lambda_):
     """compute the gradient of loss."""
-  
-    Xw=tx.dot(w)
+
     sig=sigmoid(tx.dot(w))
-    grad=tx.T.dot((sig)-y)
-    
+    grad=tx.T.dot(sig-y) + 2*lambda_*w
     return grad
 
-def compute_gradient(y, tx, w, method, batch_s = 1):
-    
+def compute_gradient(y, tx, w, method, lambda_ = 0, batch_s = 1):
+    """Compute gradient"""
+    #least squares SGD uses this gradient in a loop
     if method == 2:
         return compute_LS_gradient(y, tx, w)
-    if method == 3:
-        return compute_stoch_gradient(y, tx, w, batch_size = batch_s)
+  
     if method == 6:
-        return calculate_gradient_logREG(y, tx, w)
+        return calculate_gradient_logREG(y, tx, w, lambda_)
     else:
         print("Error: no method specified")
 
