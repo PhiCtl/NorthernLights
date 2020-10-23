@@ -103,7 +103,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 #----------------------------------------REGULARIZED LOGISTIC REGRESSION---------------------#
 
 
-def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_):
+def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_, threshold = 1e-8):
    
     """
     Penalized logistic regression using gradient descent algorithm.
