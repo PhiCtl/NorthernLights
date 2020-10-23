@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils import compute_loss, build_poly
+from utils import compute_loss, build_poly, accuracy
 from implementations import *
 from plots import *
 
@@ -25,7 +25,6 @@ def build_k_indices(y, k_fold, seed):
 def cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method):
     """Returns loss of choosen method for training and test sets."""
 
-    
     #get the right indices:
     k_te = k_indices[k]
     k_te = k_indices[k]
@@ -42,163 +41,159 @@ def cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method):
     x_augm_test = build_poly(x_test, degree)
    
     # apply method to get w_opt and compute loss for train and test data 
-    w_opt, loss_tr, l_type = choose_your_methods(method, y_tr, x_augm_tr, lambda_, gamma) 
+    w_opt, loss_tr, l_type = choose_your_methods(method, y_tr, x_augm_tr, lambda_, gamma)
     #loss depends on choosen method
     
-    #if we're dealing with least squares GD, SGD, or normal equations, 
-    #we don't need to compute the L2- regularization
-    if (method == 5) or (method == 6):
-        loss_te =compute_loss(y_test, x_augm_test, w_opt, loss_type = l_type, lbd = lambda_)
-                                          
-     
-    #compute the right loss
-    loss_te =compute_loss(y_test, x_augm_test, w_opt, loss_type = l_type)
+    #compute accuracy
+    acc = accuracy(y_test, x_augm_test, w_opt)
     
-    return loss_tr, loss_te
+    #if we're dealing with least squares, 
+    #we don't need to compute the L2- regularization
+    if (method == 1) or (method == 2) or(method == 3):
+        loss_te =compute_loss(y_test, x_augm_test, w_opt, loss_type = l_type)
+    
+    loss_te =compute_loss(y_test, x_augm_test, w_opt, loss_type = l_type, lbd = lambda_)
+    
+    
+    return loss_tr, loss_te, acc
 
 
-
-def select_best_degree(y, x, method, seed = 1, k_fold = 4, degrees, lambdas, gamma, screening_plot = False, variance_plot = False, verbose = False):
+def select_best_degree(y, x, method, seed, k_fold, degrees, lambdas, gamma, screening_plot = False, verbose = True):
     
     """Returns best degree based on loss comparisons across lambdas (k-folds cross validation)"""
-    """Returns also associated lambda and RMSE loss"""
+    """Returns also associated lambda and test loss"""
     
     
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
     
     # define lists to store the loss of training data and test data
-    rmse_tr = []
-    rmse_te = []
+    loss_tr = []
+    loss_te = []
     best_lambdas = []
-    
-    #define array to store loss along degrees (for plotting)
-    rmse_te_plot = np.empty((len(degrees), len(lambdas)))
+    accuracy_plot = np.empty((len(degrees), len(lambdas)))
     
     # k-fold cross validation: loop for each degree on each lambda on the k folds
     for d, deg in enumerate(degrees):
        #temporary lists for test and training losses for each lambda
-        rmse_tr_l = []
-        rmse_te_l = []
+        loss_tr_l = []
+        loss_te_l = []
             
         for l, lambda_ in enumerate(lambdas):
             #temporary lists for test and training losses for each k_fold
-            rmse_tr_k = []
-            rmse_te_k = []
+            loss_tr_k = []
+            loss_te_k = []
             
             for k in range(k_fold):
-                #get rmse losses for test and training data, 
-                #for ridge_regression with hyperparams (lambda_, degree)
-                loss_tr, loss_te = cross_validation(y, x, k_indices, k, lambda_, deg, gamma, method)
-                rmse_tr_k.append(loss_tr)
-                rmse_te_k.append(loss_te)
+                #get losses for test and training data of the k_fold, 
+                acc_tot = 0
+                l_tr, l_te, acc = cross_validation(y, x, k_indices, k, lambda_, deg, gamma, method)
+                loss_tr_k.append(l_tr)
+                loss_te_k.append(l_te)
+                acc_tot += acc
                 
             #mean of the loss on the k folds for each lambda    
-            rmse_tr_l.append(np.mean(rmse_tr_k))
-            rmse_te_l.append(np.mean(rmse_te_k))
-            rmse_te_plot[d,l] = rmse_te_l[-1]
+            loss_tr_l.append(np.mean(loss_tr_k))
+            loss_te_l.append(np.mean(loss_te_k))
+            
+            #compute accuracy
+            accuracy_plot[d,l] = acc_tot/k_fold
                            
+  
         
-        #select best lambda for each degree
-        ind_best_lambda = np.argmin(rmse_te_l)
+        #select best lambda for each degree -> the one with smallest loss
+        ind_best_lambda = np.argmin(loss_te_l)
         best_lambdas.append(lambdas[ind_best_lambda])
-        
         #remember best lambda loss
-        rmse_tr.append(rmse_tr_l[ind_best_lambda])
-        rmse_te.append(rmse_te_l[ind_best_lambda])
+        loss_tr.append(loss_tr_l[ind_best_lambda])
+        loss_te.append(loss_te_l[ind_best_lambda])
         
         if verbose:
-            #print degree loss
-            print("Current degree={degree}, loss={l}, best lambda={lbd}".format(degree=deg, l=rmse_te[-1], lbd = best_lambdas[-1]))
+            print("Current degree={degree}, loss={l}, best lambda={lbd}".format(degree=deg, l=loss_te[-1], lbd = best_lambdas[-1]))
     
     if screening_plot:
-        cross_validation_visualization(degrees, rmse_tr, rmse_te, 'degree')
-        
-    if variance_plot:
-        #plot RMSE variance for each degree
-        plot_variance(rmse_te_plot, 'degree')
+        cross_validation_visualization(degrees, loss_tr, loss_te, 'degree')
                             
                             
     #find best degree
-    ind_min = np.argmin(rmse_te)
+    ind_min = np.argmin(loss_te)
     best_degree = degrees[ind_min]
-    print("Best degree ={degree}, loss for k-folds cross validation={l}, best lambda={lbd}".format(degree=best_degree, l=rmse_te[ind_min], lbd = best_lambdas[ind_min]))
+    print("Best degree ={degree}, loss for k-folds cross validation={l}, best lambda={lbd}".format(degree=best_degree, l=loss_te[ind_min], lbd = best_lambdas[ind_min]))
                             
-    return best_degree, rmse_te[ind_min], best_lambdas[ind_min], rmse_te_plot
-        
+    return best_degree, loss_te[ind_min], best_lambdas[ind_min], accuracy_plot
 
-
-def select_best_lambda(y, x, method, seed = 1, k_fold = 10, degrees, lambdas, gamma, screening_plot = False, variance_plot = False, verbose = False):
+def select_best_lambda(y, x, method, seed, k_fold, degrees, lambdas, gamma, screening_plot = False, verbose = False):
     
-    """Returns best lambda across a degree range (based on smallest loss, depending on choosen method) and associated  loss"""
+    """Returns best lambda across a degree range (based on smallest loss, depending on choosen method) and associated loss"""
     
      # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
     
     # define lists to store the loss of training data and test data
-    rmse_tr = []
-    rmse_te = []
+    loss_tr = []
+    loss_te = []
     best_degrees = []
     
-    #define array to store loss along degrees (for plotting)
-    rmse_te_plot = np.empty((len(lambdas),len(degrees)))
-    
-    # k-fold cross validation: loop for each degree on each lambda on the k folds
+    # k-fold cross validation: loop for each lambda on each degree on the k folds
     for l, lambda_ in enumerate(lambdas):
        #temporary lists for test and training losses for each lambda
-        rmse_tr_l = []
-        rmse_te_l = []
+        loss_tr_l = []
+        loss_te_l = []
             
         for d, deg in enumerate(degrees):
             #temporary lists for test and training losses for each k_fold
-            rmse_tr_k = []
-            rmse_te_k = []
+            loss_tr_k = []
+            loss_te_k = []
             
             for k in range(k_fold):
-                #get rmse losses for test and training data, 
-                #for ridge_regression with hyperparams (lambda_, degree)
-                loss_tr, loss_te = cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method)
-                rmse_tr_k.append(loss_tr)
-                rmse_te_k.append(loss_te)
+                #get losses for test and training data, 
+                
+                l_tr, l_te = cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method)
+                loss_tr_k.append(l_tr)
+                loss_te_k.append(l_te)
                 
             #mean of the loss on the k folds for each lambda    
-            rmse_tr_l.append(np.mean(rmse_tr_k))
-            rmse_te_l.append(np.mean(rmse_te_k))
-            rmse_te_plot[l,d] = rmse_te_l[-1]
+            loss_tr_l.append(np.mean(loss_tr_k))
+            loss_te_l.append(np.mean(loss_te_k))
                            
         
         #select best lambda for each degree
-        ind_best_degree = np.argmin(rmse_te_l)
+        ind_best_degree = np.argmin(loss_te_l)
         best_degrees.append(degrees[ind_best_degree])
         
         #remember best lambda loss
-        rmse_tr.append(rmse_tr_l[ind_best_degree])
-        rmse_te.append(rmse_te_l[ind_best_degree])
+        loss_tr.append(loss_tr_l[ind_best_degree])
+        loss_te.append(loss_te_l[ind_best_degree])
         
         if verbose:
             #print degree loss
-            print("Current lambda={lbd}, loss={l}, best degree={deg}".format(lbd =lambda_, l=rmse_te[-1], deg = best_degrees[-1]))
+            print("Current lambda={lbd}, loss={l}, best degree={deg}".format(lbd =lambda_, l=loss_te[-1], deg = best_degrees[-1]))
     
     if screening_plot:
-        cross_validation_visualization(degrees, rmse_tr, rmse_te, 'degree')
-        
-    if variance_plot:
-        #plot RMSE variance for each degree
-        plot_variance(rmse_te_plot, 'degree')
-                            
+        cross_validation_visualization(degrees, loss_tr, loss_te, 'degree')
                             
     #find best lambda
-    ind_min = np.argmin(rmse_te)
+    ind_min = np.argmin(loss_te)
     best_lambda = lambda_[ind_min]
-    print("Best lambda ={lbd}, loss for k-folds cross validation={l}, best degree={deg}".format(lbd =best_lambda, l=rmse_te[ind_min], deg = best_degrees[ind_min]))
+    print("Best lambda ={lbd}, loss for k-folds cross validation={l}, best degree={deg}".format(lbd =best_lambda, l=loss_te[ind_min], deg = best_degrees[ind_min]))
                             
-    return best_lambda, rmse_te[ind_min], best_degrees[ind_min], rmse_te_plot
+    return best_lambda, loss_te[ind_min], best_degrees[ind_min]
 
 #-----------------------------------------------------------------------------------------------------#
 
 def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 200, batch_size = 1):
     
-   # create initial w for methods using it
+        """
+        Methods:
+        1 : Least squares
+        2 : Least squares gradient descent
+        3 : least squares stochastic gradient descent
+        4 : Ridge regression
+        5 : Logstic regression
+        6 : Regularized logistic regression
+        """
+    
+        # create initial w for methods using it
         initial_w = np.zeros(tx_tr.shape[1])
 
         if method == 1:
@@ -213,7 +208,7 @@ def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 200, ba
             
         if method == 3:
             # Use least squares SGD
-            w, loss = least_squares_SGD(y_tr, tx_tr, max_iters, batch_size, gamma)
+            w, loss = least_squares_SGD(y_tr, tx_tr, initial_w, batch_size, max_iters, gamma)
             return w, loss, 'RMSE'
             
         if method == 4:
