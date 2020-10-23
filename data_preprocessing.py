@@ -65,31 +65,34 @@ def get_jets(x, y, cat_id, undefined_indices, list_ = False):
 
 #-------------------------------------DATA STANDARDIZATION normalization, etc... ------------------------------------------------------------------------------#
 
-def preprocessing_data(x, normalization = True, standardization = False, correl = False):
-    """Returns a standardized, normalized or uncorrelated matrix"""
-     
-     
+def preprocessing_data(x, normalization = False, standardization = False, correl = False):
+    """Returns a standardized matrix, replacing "-999" entries by median (sensitivity to outliers) of matrix"""
+    
     x[np.argwhere(x == -999)] = np.nan
     nan_indices = np.argwhere(np.isnan(x))
     x_med = np.nanmedian(x,axis = 0)
     x_mean = np.nanmean(x, axis = 0)
+    x_std = np.nanstd(x, axis = 0)
     
     for ind in nan_indices:
         med_val = x_med[ind[1]]
         x[ind[0],ind[1]] = med_val
     
     if correl:
-        X = correlation(x)
-    if standardization:
-        X =  (x - x_med) / x_mean
-    if normalization:
-        column_sum = x.sum(axis = 0)
-        X = x / column_sum[np.newaxis,:]
-    else:
-        X = x
+        x = correlation(x)
     
-    return X
-
+    if standardization:
+        #by feature
+        for j in range(x.shape[1]):
+            col = (x[:,j] - x_mean[j]) / x_std[j]
+            x[:,j] = col
+        
+    if normalization:
+        
+        column_sum = np.sum(x, 0)
+        x = x / column_sum[np.newaxis,:]
+    
+    return x
 
 #-------------------------------------CORRELATION------------------------------------------------------------------------------#
 
