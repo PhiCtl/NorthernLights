@@ -63,32 +63,21 @@ def get_jets(x, y, cat_id, undefined_indices, list_ = False):
     else:   
         return jet_0, y_0, jet_1, y_1, jet_2, y_2, jet_3, y_3, ind
 
-#-------------------------------------DATA STANDARDIZATION------------------------------------------------------------------------------#
-
-"Standardization function -> returns matrix of values with zero mean and standard deviation of 1"
+#-------------------------------------DATA STANDARDIZATION normalization, etc... ------------------------------------------------------------------------------#
 
 def preprocessing_data(x, normalization = True, standardization = False, correl = False):
-    """Returns a standardized matrix, replacing "-999" entries by median (sensitivity to outliers) of matrix"""
-    x[x == -999] = np.nan
-    
-    #setting nan values to median over all datapoints for a specific feature: worked but reduced to 0 when standardizing
-    
-    nan_indices = np.argwhere(np.isnan(x))
-    x_med = np.nanmedian(x,axis = 0)
-    x_mean = np.nanmean(x, axis = 0)
-    
-    for ind in nan_indices:
-        med_val = x_med[ind[1]]
-        x[ind[0],ind[1]] = med_val
+    """Returns a standardized, normalized or uncorrelated matrix"""
+     #No need for -999 handling here since they're only due to undefined columns for different pri_jet_num values
         
     if correl:
         X = correlation(x)
-    
     if standardization:
         X =  (x - x_med) / x_mean
     if normalization:
         column_sum = x.sum(axis = 0)
         X = x / column_sum[np.newaxis,:]
+    else:
+        X = x
     
     return X
 
@@ -116,20 +105,3 @@ def correlation(x):
             x=np.delete(x, index[i,0],1)
             deleted_column=np.append(deleted_column, index[i,0])
     return x
-
-def data_standardization(x,y,categ_ind, undefined_indices, flag_standard=1, flag_correlation=0):
-    #delete the meaningless features depending on the value of PRI_JET_NUM
-    x_jets, y_jets, ind=get_jets(x, y, cat_id, undefined_indices, True)
-    
-    #standardize jet
-    if flag_standard==1:
-        for i in range (0,4):
-            x_jets[i]=standard(x_jets[i])
-            y_jets[i]=standard(y_jets[i])
-    
-    #correlation
-    if flag_correlation==1:
-        for i in range (0,4):
-            x_jets[i]=correlation(x_jets[i])
-    
-    return x_jets, y_jets, ind
