@@ -68,7 +68,10 @@ def get_jets(x, y, cat_id, undefined_indices, list_ = False):
 def preprocessing_data(x, normalization = True, standardization = False, correl = False):
     """Returns a standardized, normalized or uncorrelated matrix"""
      #No need for -999 handling here since they're only due to undefined columns for different pri_jet_num values
-        
+     
+    x_med = np.med(x, 0)
+    x_mean = np.mean(x,0)
+    
     if correl:
         X = correlation(x)
     if standardization:
