@@ -1,19 +1,38 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from cross_validation_phi import select_best_degree, select_best_lambda
+from cross_validation import select_best_degree, select_best_lambda, choose_your_methods
 from utils import accuracy_2, build_poly
 from proj1_helpers import combine_jets
 
 #------------------------RUN FUNCTION---------------------------------------------------#
 
+
 def best_w(y,x,method,best_lambda,best_deg, gamma = 0.00001):
+    """Returns the optimal weights for choosen method, with optimal lambda, degree and gamma
+    Parameters:
+    - prediction y training
+    - method
+    - training data matrix x
+    - best_lambda from cross validation
+    - best_deg: best degree from cross validation
+    - gamma: default value from experimentation
+    
+    
+    Method flags:
+    1 : Least squares
+    2 : Least squares gradient descent (least squares GD)
+    3 : Least squares stochastic gradient descent (least squares SGD)
+    4 : Ridge regression
+    5 : Logistic regression
+    6 : Regularized logistic regression
+    """
     
     tx_tr_opt = build_poly(x,best_deg)
     
-    # Compute optimal weight
+    # Compute optimal weight 
     initial_w = np.zeros((tx_tr_opt.shape[1],))
-    w_opt,_=choose_your_methods(method, y, tx_tr_opt, best_lambda, gamma)
+    w_opt,_,_=choose_your_methods(method, y, tx_tr_opt, best_lambda, gamma)
     
     return w_opt
 
@@ -29,7 +48,7 @@ def compute_accuracy(y_test,jet_list,index_te,w_opt_list):
 
     return accuracy_2(y_test, y_predict)
 
-def select_best_parameter(y, x, method, param_type, seed = 1 , k_fold = 10, degrees = np.arange(1,10,1), lambdas = np.logspace(-20,-10,3), gamma = 0.00001):
+def select_best_parameter(y, x, method, param_type, seed = 1 , k_fold = 5, degrees = np.arange(1,10,1), lambdas = np.logspace(-20,-10,3), gamma = 0.0000001 ):
     
     print("For method n°:{n}".format(n = method))
     
@@ -40,5 +59,3 @@ def select_best_parameter(y, x, method, param_type, seed = 1 , k_fold = 10, degr
     if param_type == 'lambda':
         return select_best_lambda(y, x, method, seed, k_fold, degrees, lambdas, gamma)
     
-    """"if param_type == 'gammas over degrees':
-        return select_best_gamma"""
