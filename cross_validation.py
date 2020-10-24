@@ -58,7 +58,7 @@ def cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method):
     return loss_tr, loss_te, acc
 
 
-def select_best_degree(y, x, method, seed, k_fold, degrees, lambdas, gamma, screening_plot = False, verbose = True):
+def select_best_degree(y, x, method, seed, k_fold, degrees, lambdas, gamma, screening_plot = False, verbose = False):
     
     """Returns best degree based on loss comparisons across lambdas (k-folds cross validation)"""
     """Returns also associated lambda and test loss"""
@@ -181,7 +181,7 @@ def select_best_lambda(y, x, method, seed, k_fold, degrees, lambdas, gamma, scre
 
 #-----------------------------------------------------------------------------------------------------#
 
-def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 200, batch_size = 1):
+def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 700, batch_size = 1):
     
         """
         Methods:
