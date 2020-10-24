@@ -1,8 +1,10 @@
 # Higgs Boson Challenge
 
-The  Higgs  boson  is  an  elementary  particle  whoseexistence was announced in 1964 and observed for the first time in2013 at the Large Hadron Collider of CERN. During a high speed collision event between billions of particle, it is possible to identifythe Higg Boson thanks to its decay signature. Data of a collisionevent can be collected, and be used as a training set for machinelearning models to be able to predict if a Higg Boson was emitted or not during a collision, based on the parameters recorded. This project aims to find a machine learning model that will have the best accuracy in predicting if a Higgs Boson was emitted or not during a collision event.
+The  Higgs  boson  is  an  elementary  particle  whose existence was announced in 1964 and observed for the first time in 2013 at the Large Hadron Collider of CERN. During a high speed collision event between billions of particle, it is possible to identifythe Higg Boson thanks to its decay signature. Data of a collisionevent can be collected, and be used as a training set for machinelearning models to be able to predict if a Higg Boson was emitted or not during a collision, based on the parameters recorded. This project aims to find a machine learning model that will have the best accuracy in predicting if a Higgs Boson was emitted or not during a collision event.
 
 You can check the report in the github repository to have an overview of the project and an insight into the steps that led to our prediction model.
+
+Our best prediction was obtained with ridge regression and the model had an overall accuracy of 0.82446 (submission on AICrowd).
 
 ## Installation
 
@@ -16,7 +18,7 @@ Clone the repository: git clone https://github.com/PhiCtl/NorthernLights
 ```bash
 Unzip train.zip
 ```
-## Usage
+## Running the program
 
 To run the program, open a terminal on Jupyter Notebook, go in the project repository and type the following command:
 
