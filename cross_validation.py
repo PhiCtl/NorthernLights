@@ -45,7 +45,7 @@ def cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method):
     #loss depends on choosen method
     
     #compute accuracy
-    acc = accuracy(y_test, x_augm_test, w_opt)
+    acc = accuracy(y_test, predict_labels(x_augm_test.dot(w_opt)) )
     
     #if we're dealing with least squares, 
     #we don't need to compute the L2- regularization
@@ -58,7 +58,7 @@ def cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method):
     return loss_tr, loss_te, acc
 
 
-def select_best_degree(y, x, method, seed, k_fold, degrees, lambdas, gamma, screening_plot = False, verbose = False):
+def select_best_degree(y, x, method, by_accuracy, seed, k_fold, degrees, lambdas, gamma, screening_plot = False, verbose = False):
     
     """Returns best degree based on loss comparisons across lambdas (k-folds cross validation)"""
     """Returns also associated lambda and test loss"""
@@ -67,11 +67,12 @@ def select_best_degree(y, x, method, seed, k_fold, degrees, lambdas, gamma, scre
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
     
-    # define lists to store the loss of training data and test data
+    # define lists to store the loss of training data and test data, and accuracies
     loss_tr = []
     loss_te = []
     best_lambdas = []
     accuracy_plot = np.empty((len(degrees), len(lambdas)))
+    accuracy_te = []
     
     # k-fold cross validation: loop for each degree on each lambda on the k folds
     for d, deg in enumerate(degrees):
@@ -96,17 +97,25 @@ def select_best_degree(y, x, method, seed, k_fold, degrees, lambdas, gamma, scre
             loss_tr_l.append(np.mean(loss_tr_k))
             loss_te_l.append(np.mean(loss_te_k))
             
-            #compute accuracy
+            #compute mean accuracy
             accuracy_plot[d,l] = acc_tot/k_fold
                            
   
-        
-        #select best lambda for each degree -> the one with smallest loss
-        ind_best_lambda = np.argmin(loss_te_l)
+        if by_accuracy:
+            #select best lambda for each degree -> the one with biggest accuracy
+            ind_best_lambda = np.argmax(accuracy_plot[d,:])
+        else:
+            #select best lambda for each degree -> the one with smallest loss
+            ind_best_lambda = np.argmin(loss_te_l)
+            
+        #remeber best lambda and accuracy
         best_lambdas.append(lambdas[ind_best_lambda])
+        accuracy_te.append(accuracy_plot[d,ind_best_lambda])
+            
         #remember best lambda loss
         loss_tr.append(loss_tr_l[ind_best_lambda])
         loss_te.append(loss_te_l[ind_best_lambda])
+        
         
         if verbose:
             print("Current degree={degree}, loss={l}, best lambda={lbd}".format(degree=deg, l=loss_te[-1], lbd = best_lambdas[-1]))
@@ -114,13 +123,19 @@ def select_best_degree(y, x, method, seed, k_fold, degrees, lambdas, gamma, scre
     if screening_plot:
         cross_validation_visualization(degrees, loss_tr, loss_te, 'degree')
                             
+    #find best degree                        
+    if by_accuracy:
+        ind = np.argmax(accuracy_te)
+    else:
+        ind = np.argmin(loss_te)
+    best_degree = degrees[ind]
+        
+        
+    print("Best degree ={degree}, loss for k-folds cross validation={l}, best lambda={lbd}, accuracy={a}".format(degree=best_degree, l=loss_te[ind], lbd = best_lambdas[ind], a = accuracy_te[ind]))
                             
-    #find best degree
-    ind_min = np.argmin(loss_te)
-    best_degree = degrees[ind_min]
-    print("Best degree ={degree}, loss for k-folds cross validation={l}, best lambda={lbd}".format(degree=best_degree, l=loss_te[ind_min], lbd = best_lambdas[ind_min]))
-                            
-    return best_degree, loss_te[ind_min], best_lambdas[ind_min], accuracy_plot
+    return best_degree, accuracy_te[ind], best_lambdas[ind], accuracy_plot
+
+
 
 def select_best_lambda(y, x, method, seed, k_fold, degrees, lambdas, gamma, screening_plot = False, verbose = False):
     
@@ -181,7 +196,7 @@ def select_best_lambda(y, x, method, seed, k_fold, degrees, lambdas, gamma, scre
 
 #-----------------------------------------------------------------------------------------------------#
 
-def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 700, batch_size = 1):
+def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 200, batch_size = 1):
     
         """
         Methods:
@@ -208,7 +223,7 @@ def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 700, ba
             
         if method == 3:
             # Use least squares SGD
-            w, loss = least_squares_SGD(y_tr, tx_tr, initial_w, batch_size, max_iters, gamma)
+            w, loss = least_squares_SGD(y_tr, tx_tr, batch_size, max_iters, gamma)
             return w, loss, 'RMSE'
             
         if method == 4:
