@@ -2,7 +2,7 @@
 
 import numpy as np
 from cross_validation import select_best_degree, select_best_lambda, choose_your_methods
-from utils import accuracy, build_poly
+from utils import accuracy, build_poly, predict_labels
 from proj1_helpers import *
 from data_preprocessing import *
 
@@ -53,7 +53,7 @@ def compute_accuracy(y_test,jet_list,index_te,w_opt_list):
     
     y_predict = combine_jets(y_pred_list, index_te)
 
-    return accuracy(y_test, y_predict)
+    return accuracy_2(y_test, y_predict)
 
 def select_best_parameter(y, x, method, param_type,  by_accuracy = True, seed = 1 , k_fold = 5, degrees = np.arange(1,10,1), lambdas = np.logspace(-20,-10,3), gamma = 0.0000001 ):
     
@@ -93,9 +93,7 @@ def predict():
     print("Data preprocessing: done")
 
     #hyperparameter screening for best method (4: Ridge)
-    
     #we selected a special range for degrees and lambdas we came up with after several trials
-    #we find the best parameters yielding the highest accuracy on the kfold validation
     for (jet, y_jet, index) in zip(jet_process_tr, y_jet_train, np.arange(4)):
         print("Jet n°:", index)
         best_degree, rmse_te, best_lambda, _ = select_best_parameter(y_jet, jet, 4, 'degree', by_accuracy = True, seed = 1 , k_fold = 5, degrees = np.array([1,5,6,7,8,10,12]), lambdas = np.array([0.009999, 0.1, 0.001]))
@@ -108,7 +106,7 @@ def predict():
     
     print("Grid search for ridge hyperparameters: done")
     
-    #compute accuracy on local test set
+    #compute accuracy on test set
     y_pred_list = []
     for(jet, w, deg) in zip(jet_process_te, w_list, best_degs):
         x_augm_t = build_poly(jet, deg)
@@ -120,22 +118,21 @@ def predict():
     
     #generate submission file
     
-    #load data and perform processing
+    #load data
     _, tX_test, ids_test = load_csv_data('data/test.csv')
     jet_final, ind_list = get_jets_final(tX_test, 22, undefined_features)
     for jet in jet_final:
         jet = (preprocessing_data(jet, False, True, False))
-    
-    #compute prediction
+        
     final_jet = []
     for (jet, w, deg) in zip(jet_final, w_list, best_degs):
         x_augm = build_poly(jet, deg )
         y_pred = x_augm.dot(w)
         final_jet.append(y_pred)
-    y_final = combine_jets(final_jet, ind_list)
-    Y = predict_labels_2(y_final)
     
-    #create submission file
+    y_final = combine_jets(final_jet, ind_list)
+    Y = predict_labels(y_final)
+    
     create_csv_submission(ids_test, Y, 'data/best_prediction_ridge.csv')
     print("Submission file created")
     

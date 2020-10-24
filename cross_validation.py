@@ -45,7 +45,7 @@ def cross_validation(y, x, k_indices, k, lambda_, degree, gamma, method):
     #loss depends on choosen method
     
     #compute accuracy
-    acc = accuracy(y_test, predict_labels(x_augm_test.dot(w_opt)) )
+    acc = accuracy(y_test, x_augm_test.dot(w_opt))
     
     #if we're dealing with least squares, 
     #we don't need to compute the L2- regularization
