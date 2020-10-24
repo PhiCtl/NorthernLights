@@ -83,27 +83,13 @@ def build_poly(x, degree):
 
 #------------------------------------------ACCURACY-------------------------------------------------------------#
 
-def predict_labels(weights, data):
-    """Generates class predictions given weights, and a test data matrix"""
-    y_pred = np.dot(data, weights)
-    y_pred[np.where(y_pred <= 0)] = -1
-    y_pred[np.where(y_pred > 0)] = 1
-    
-    return y_pred
-
-def predict_labels_2(y_pred):
+def predict_labels(y_pred):
     y_pred[np.where(y_pred <= 0)] = -1
     y_pred[np.where(y_pred > 0)] = 1
     return y_pred
 
-def accuracy(y_true, x_te, w_opt):
-                 
-    """Compute accuracy of a given model"""
-    y_test = predict_labels(w_opt, x_te)
-    acc = np.equal(y_test, y_true)
-    return np.sum(acc)/len(y_test)
 
-def accuracy_2(y_true, y_pred):
+def accuracy(y_true, y_pred):
     
     if(len(y_true) != len(y_pred)):
         print("Error: sizes don't match")
@@ -113,7 +99,18 @@ def accuracy_2(y_true, y_pred):
         acc = np.equal(y_true, y_pred)
         return np.sum(acc)/len(y_true)
 
+def accuracy_SGD(y_true, y_pred):
     
+    if(len(y_true) != len(y_pred)):
+        print("Error: sizes don't match")
+    else:
+        y_pred[y_pred <= 0] = -1
+        
+        y_pred[y_pred > 0] = 1
+        
+        acc = np.equal(y_true, y_pred.T)
+        
+        return np.sum(acc)/len(y_true)
 #-----------------------------STOCHASTIC GRADIENT DESCENT-----------------------------------------------#
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
