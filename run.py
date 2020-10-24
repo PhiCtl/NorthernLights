@@ -47,7 +47,8 @@ def compute_accuracy(y_test,jet_list,index_te,w_opt_list):
     
     y_predict = combine_jets(y_pred_list, index_te)
 
-    return accuracy_2(y_test, y_predict)
+    return accuracy(y_test, y_predict)
+
 
 def select_best_parameter(y, x, method, param_type, seed = 1 , k_fold = 5, degrees = np.arange(1,10,1), lambdas = np.logspace(-20,-10,3), gamma = 0.0000001 ):
     
@@ -107,7 +108,7 @@ def run():
         y_pred_list.append(y_pred_)
     
     y_predict = combine_jets(y_pred_list, index_te)
-    print("Ridge prediction: ",accuracy_2(y_te, y_predict))
+    print("Ridge prediction: ",accuracy(y_te, y_predict))
     
     #generate submission file
     
@@ -124,8 +125,6 @@ def run():
         final_jet.append(y_pred)
     
     y_final = combine_jets(final_jet, ind_list)
-    Y = predict_labels_2(y_final)
+    Y = predict_labels(y_final)
     
     create_csv_submission(ids_test, Y, 'data/best_prediction_ridge.csv')
-    
-    
