@@ -99,18 +99,7 @@ def accuracy(y_true, y_pred):
         acc = np.equal(y_true, y_pred)
         return np.sum(acc)/len(y_true)
 
-def accuracy_SGD(y_true, y_pred):
-    
-    if(len(y_true) != len(y_pred)):
-        print("Error: sizes don't match")
-    else:
-        y_pred[y_pred <= 0] = -1
-        
-        y_pred[y_pred > 0] = 1
-        
-        acc = np.equal(y_true, y_pred.T)
-        
-        return np.sum(acc)/len(y_true)
+
 #-----------------------------STOCHASTIC GRADIENT DESCENT-----------------------------------------------#
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
