@@ -103,7 +103,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 #----------------------------------------REGULARIZED LOGISTIC REGRESSION---------------------#
 
 
-def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_, threshold = 1e-8):
+def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_, threshold = 1e-5):
    
     """
     Penalized logistic regression using gradient descent algorithm.
@@ -111,7 +111,6 @@ def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_, threshold = 1e-
     """
    
     losses=[]
-    
     # Performing Gradient Descent
     for n_iter in range(max_iters):
         
@@ -120,11 +119,11 @@ def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_, threshold = 1e-
         gradient=compute_gradient(y, tx, w, 6, lambda_)
     
         #update w
-        w=w-gamma*gradient
+        w=w-gamma/np.sqrt(n_iter+1)*gradient
         
         
-        if (n_iter % 100 == 0):
-            # print average loss for the last print_every iterations
+        if (n_iter % 1000 == 0):
+            #print average loss for the last print_every iterations
             print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
     
         #Store losses   
@@ -132,7 +131,7 @@ def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_, threshold = 1e-
         
         #Check convergence
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
+            print('break')
             break
            
     return w, loss
-
