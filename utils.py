@@ -22,7 +22,7 @@ def compute_loss_logREG(y, tx, w, lambda_):
     """compute the loss: negative log likelihood."""
     sig = sigmoid(tx.dot(w))
     loss = y.T.dot( np.log(sig) ) + (1 - y).T.dot( np.log(1-sig) )
-    return -np.sum(loss)/(tx.shape[0]) + np.squeeze(w.T.dot(w))*lambda_
+    return -np.sum(loss) + np.squeeze(w.T.dot(w))*lambda_
 
 def compute_loss_MAE(y, tx, w):
     """Calculate the loss using mae """
