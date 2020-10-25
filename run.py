@@ -2,7 +2,7 @@
 
 import numpy as np
 from cross_validation import select_best_degree, select_best_lambda, choose_your_methods
-from utils import accuracy, build_poly, predict_labels
+from optimized_utils import accuracy, build_poly, predict_labels
 from proj1_helpers import *
 from data_preprocessing import *
 
