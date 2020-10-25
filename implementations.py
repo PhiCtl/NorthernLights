@@ -66,7 +66,7 @@ def least_squares_SGD(y, tx, batch_size, iter_, gamma):
              #compute stochastic gradient and error
             grad=compute_gradient(y, tx, w, 2, batch_s = 1)
             #new w
-            w = w - gamma/np.sqrt(n+1) * grad
+            w = w - gamma * grad
             #loss
             losses.append(compute_loss(y_b, tx_b, w, 'RMSE'))
             
@@ -108,7 +108,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
         grad= compute_gradient(y, tx, w, 6)
         loss = compute_loss(y, tx, w, 'logREG')
         losses.append(loss)
-        w = w - (gamma/np.sqrt(n_iter+1) * grad)
+        w = w - (gamma * grad)
         
     return w, losses[-1]
 
@@ -131,7 +131,7 @@ def reg_logistic_regression(y, tx, w, gamma, max_iters, lambda_, threshold = 1e-
         gradient=compute_gradient(y, tx, w, 6, lambda_)
     
         #update w
-        w=w-gamma/np.sqrt(n_iter+1)*gradient
+        w=w-gamma*gradient
         
     
         #Store losses   
