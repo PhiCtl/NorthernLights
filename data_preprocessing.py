@@ -53,10 +53,6 @@ def get_jets(x, y, cat_id, undefined_indices, list_ = False):
     jet_3, y_3, i3 = extract_jet(x, y, cat_id, 3, undefined_indices[3])
     
     ind = [i0, i1, i2, i3]
-    test = jet_0.shape[0] + jet_1.shape[0] + jet_2.shape[0] + jet_3.shape[0]
-    test2 = len(y_0) + len(y_1) + len(y_2) + len(y_3)
-    
-    print("jet tot size:",test, " y tot size: ", test2)
     
     if list_:
         return [jet_0, jet_1, jet_2, jet_3], [y_0, y_1, y_2, y_3], ind

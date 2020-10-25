@@ -196,7 +196,7 @@ def select_best_lambda(y, x, method, seed, k_fold, degrees, lambdas, gamma, scre
 
 #-----------------------------------------------------------------------------------------------------#
 
-def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 200, batch_size = 1):
+def choose_your_methods(method, y_tr, tx_tr, lambda_, gamma, max_iters = 700, batch_size = 1):
     
         """
         Methods:

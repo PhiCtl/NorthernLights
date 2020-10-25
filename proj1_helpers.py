@@ -2,6 +2,8 @@
 """some helper functions for project 1."""
 import csv
 import numpy as np
+from cross_validation import select_best_degree, select_best_lambda, choose_your_methods
+from utils import accuracy, build_poly, predict_labels
 
 #-----------------------------LOAD DATA---------------------------------------------------------------------------#
 def load_csv_data(data_path, sub_sample=False):
@@ -67,6 +69,62 @@ def combine_jets(y_jets, indices):
         y[ind] = y_jets[i]
     
     return y
+
+#----------------------------------------RUN FUNCTIONS----------------------------------------------------------#
+def best_w(y,x,method,best_lambda,best_deg, gamma = 0.00001):
+    """Returns the optimal weights for choosen method, with optimal lambda, degree and gamma
+    Parameters:
+    - prediction y training
+    - method
+    - training data matrix x
+    - best_lambda from cross validation
+    - best_deg: best degree from cross validation
+    - gamma: default value from experimentation
+    
+    
+    Method flags:
+    1 : Least squares
+    2 : Least squares gradient descent (least squares GD)
+    3 : Least squares stochastic gradient descent (least squares SGD)
+    4 : Ridge regression
+    5 : Logistic regression
+    6 : Regularized logistic regression
+    """
+    
+    tx_tr_opt = build_poly(x,best_deg)
+    
+    # Compute optimal weight 
+    initial_w = np.zeros((tx_tr_opt.shape[1],))
+    w_opt,_,_=choose_your_methods(method, y, tx_tr_opt, best_lambda, gamma)
+    
+    return w_opt
+
+
+def select_best_parameter(y, x, method, param_type,  by_accuracy = True, seed = 1 , k_fold = 5, degrees = np.arange(1,10,1), lambdas = np.logspace(-20,-10,3), gamma = 0.0000001 ):
+    """Returns the best parameter (either 'lambda' or 'degree') for a given method (see methode coding in readme)
+    
+    Input parameters:
+    
+    y               : train set prediction vector
+    x               : train set data
+    method          : 1, 2, 3, 4, 5, 6 (see method coding above)
+    param_type      : degree or lambda
+    by_accuracy     : if True,  returns parameters that yield the best accuracy for kfold cross validation
+                      if False, returns parameters that minimize the loss for a given method
+    seed            : set to 1
+    k_fold          : 5 folds were chosen
+    degrees         : degree range on which the methods are evaluated
+    lambdas         : lambda range on which the methods are evaluated -> MUST BE SET TO NP.ARRAY([0]) FOR METHODS WITHOUT REGULARIZATION
+    gamma           : for methods implying a gradient descent"""
+    
+    print("For method n°:{n}".format(n = method))
+    
+    if param_type == 'degree':
+        return select_best_degree(y, x, method, by_accuracy, seed, k_fold, degrees, lambdas, gamma)
+    
+    if param_type == 'lambda':
+        return select_best_lambda(y, x, method, by_accuracy, seed, k_fold, degrees, lambdas, gamma)
+    print('Please select a parameter')
 
 #---------------------------------------CREATE SUBMISSION FILE---------------------------------------------------#
 

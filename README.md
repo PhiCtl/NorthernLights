@@ -8,12 +8,12 @@ Our best prediction was obtained with ridge regression and the model had an over
 
 ## Installation
 
-1.You can download the code to run the models and data from the github repository [Github](https://github.com/PhiCtl/NorthernLights)
+1.You can download the code to run the models and data from the github repository [Github](https://github.com/PhiCtl/NorthernLights) into the data directory
 
 ```bash
 Clone the repository: git clone https://github.com/PhiCtl/NorthernLights
 ```
-2.Unzip the train.csv in the same file as the file named run.py. Once in the right directory, type the following line:
+2.Unzip the train.csv in the data directory. Once in the right directory, type the following line:
 
 ```bash
 Unzip train.zip
@@ -26,7 +26,7 @@ To run the program, open a terminal on Jupyter Notebook, go in the project repos
 python run.py
 ```
 
-The best method (ridge regression) will run and a file 'best_prediction_ridge.csv' will be generated which contains the prediction and can be uploaded on AICrowd to make a submission.
+The best method (ridge regression) will run and a file 'best_prediction_ridge.csv' will be generated in the folder predictions which contains the prediction and can be uploaded on AICrowd to make a submission.
 
 ## Notations and parameters
  The different method are referred as the following in the code:
