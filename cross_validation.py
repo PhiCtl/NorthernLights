@@ -2,8 +2,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils import compute_loss, build_poly, accuracy
-from implementations import *
+from optimized_utils import compute_loss, build_poly, accuracy
+from optimized_implementations import *
 from plots import *
 
 
