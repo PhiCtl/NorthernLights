@@ -22,7 +22,7 @@ def accuracy_visualization(y1,y2,y3):
     
 
 # Define data for chart
-    x = np.linspace(1,15,15)
+    x = np.arange(1,15,1)
     #y1 = acc_LS
     #y2 = acc_LR
     #y3 = acc_RegLogReg
