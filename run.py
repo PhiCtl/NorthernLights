@@ -43,7 +43,7 @@ print("Data preprocessing: done")
 #we selected a special range for degrees and lambdas we came up with after several trials
 for (jet, y_jet, index) in zip(jet_process_tr, y_jet_train, np.arange(4)):
     print("Jet n°:", index)
-    best_degree, rmse_te, best_lambda, _ = select_best_parameter(y_jet, jet, 4, 'degree', by_accuracy = False, seed = 1 , k_fold = 5, degrees = np.array([1,5,6,7,8,10,12]), lambdas = np.array([0.009999, 0.1, 0.001]))
+    best_degree, rmse_te, best_lambda, _ = select_best_parameter(y_jet, jet, 4, 'degree', by_accuracy = True, seed = 1 , k_fold = 5, degrees = np.array([1,5,6,7,8,10,12]), lambdas = np.array([0.009999, 0.1, 0.001]))
     best_degs.append(best_degree)
     best_lbds.append(best_lambda)
     
